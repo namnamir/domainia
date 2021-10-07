@@ -1,0 +1,2 @@
+api_key_whoisxml = 'at_TKgontBW1emawYtuUPyyeERLAnzGB'
+api_key_nameauditor = '775e1bdbbamsh2a02d55033e216ap119c0djsn1fd1bd5d3fc6'
