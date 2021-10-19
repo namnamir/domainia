@@ -30,6 +30,9 @@ config = {
         'administrativeContact',
         'technicalContact',
     ],
+    # for doing the DNS recon, it uses the random list of DNS server,
+    # if you prefer just one specific DNS server, remove the list and
+    # add the ones you prefer.
     'dns_servers': [
         '8.8.8.8', '8.8.4.4', # Google
         '9.9.9.9', '149.112.112.112', # Quad9
@@ -39,6 +42,8 @@ config = {
         '76.76.19.19', '76.223.122.150', # Alternate DNS
         '94.140.14.14', '94.140.15.15', # AdGuard DNS
     ],
+    # for the CSV output file, you can define the delimiter of your choice
+    # for each column of it.
     'delimiter': {
         'csv': ',',
         'subdomain': ' ',
