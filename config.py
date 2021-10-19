@@ -5,7 +5,7 @@ config = {
         # find alternative domains and subdomains  by going into each single
         # certificate or just by skimming the ssl overview
         # possible options: [quick, deep]
-        'Alt-Domain Finder': 'deep',
+        'Alt-Domain Finder': 'quick',
     },
     # list of the recoreds
     # possible records:
