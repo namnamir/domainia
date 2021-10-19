@@ -51,7 +51,7 @@ def ssl_parser(domain):
             # iterate over each issued certificate (cert history)
             for i in range(0, len(json_data)):
                 # if it is a quick search, ignore loading each certificate
-                if (config['flags']['Alt-Domain Finder'] == "quick") and (i > 0):
+                if (config['flags']['alt_domain_finder'] == "quick") and (i > 0):
                     break
                 cert = requests.get(config['api']['crt']['url2'].format(json_data[i]['id']))
                 # fix the HTML format of the space
@@ -90,7 +90,7 @@ def ssl_parser(domain):
                     }
 
             # if it is a quick search
-            if config['flags']['Alt-Domain Finder'] == "quick":
+            if config['flags']['alt_domain_finder'] == "quick":
                 # iterate over the found results
                 for (key, value) in enumerate(json_data):
                     # agregate all alternative names
