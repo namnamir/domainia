@@ -2,10 +2,10 @@ from api_keys import *
 
 config = {
     'flags': {
-        # find alternative domains and subdomains  by going into each single
+        # find alternative domains and subdomains by going into each single
         # certificate or just by skimming the ssl overview
         # possible options: [quick, deep]
-        'Alt-Domain Finder': 'quick',
+        'alt_domain_finder': 'quick',
     },
     # list of the recoreds
     # possible records:
