@@ -1,20 +1,34 @@
+[![PyPI](https://img.shields.io/pypi/v/domainia?style=flat-square)](https://pypi.org/project/Domainia/) ![GitHub last commit](https://img.shields.io/github/last-commit/namnamir/domainia?style=flat-square) [![GitHub issues](https://img.shields.io/github/issues-raw/namnamir/domainia?style=flat-square)](https://github.com/namnamir/domainia/issues) ![GitHub branch checks state](https://img.shields.io/github/checks-status/namnamir/domainia/main?style=flat-square) [![License](https://img.shields.io/github/license/namnamir/domainia?style=flat-square)](LICENSE) ![GitHub Sponsors](https://img.shields.io/github/sponsors/namnamir?style=flat-square)
+
 <img src="img/logo.png" width="150px" align="right">
 
-**Domainia** Scanner is an Open-source Intelligence (OSINT) tool that enumerates subdomains, all DNS records, IP addresses, related domains/subdomains, certificate details, site info, HTTP status, name servers (NS), domain whois, and etc. of a single domain or a list of domains by using the passive and active reconnaissance techniques.
+**Domainia** Scanner is an automated Open-source Intelligence (OSINT) tool that enumerates subdomains, all DNS records, IP addresses, related domains/subdomains, certificate details, site info, HTTP status, name servers (NS), domain whois, and etc. of a single domain or a list of domains by using the passive and active reconnaissance techniques.
 
+---
 # How to Use
 
-## 0- Install Dependencies
-By running the following command, it will install all required dependencies for the current user.
+## 1. Installation
+### 1.1. Installation Through [PyPi](https://pypi.org/project/Domainia/)
+[![PyPI](https://img.shields.io/pypi/v/domainia?style=flat-square)](https://pypi.org/project/Domainia/)
+If you would like to install it as a Python package, run the following command.
+```bash
+pip install Domainia
+```
+### 1.2. Non-package Usage
+First, clone the package from Github.
+```bash
+git clone https://github.com/namnamir/domainia.git
+```
+Then, b1y running the following command, it will install all required dependencies for the current user.
 ```Bash
 pip install requirements.txt --user
 ```
 
-## 1- Add API Keys
+## 2. Add API Keys
 Modify the file `api_keys.py` and add the API keys of the mentioned tools.
-![Define APIs](img/api.png)
+![Define APIs](https://raw.githubusercontent.com/namnamir/domainia/main/img/api.png)
 
-## 2- Check the Configuration File
+## 3. Check the Configuration File
 Open the file `config.py` and modify it if needed. For each section of it, there is an explanation as the comment.
 
 There are many options can be modified in the config file. Here are a list of the options:
@@ -28,7 +42,7 @@ There are many options can be modified in the config file. Here are a list of th
 - `ssl` to set which SSL detail should be written into the CSV file
 - `api` to modify details of the APIs including the data/time format
 
-## 3- Run the Script
+## 4. Run the Script
 The script can be run in 2 modes, loading the list of domains from a file or from the command.
 ```bash
   -h, --help
@@ -46,13 +60,14 @@ The script can be run in 2 modes, loading the list of domains from a file or fro
   -o OUTPUT, --output OUTPUT
                         The name of the output CSV file, e.g. results.csv
 ```
-![Run Domainia Scanner](img/scan.gif)
+![Run Domainia Scanner](https://raw.githubusercontent.com/namnamir/domainia/main/img/scan.gif)
 
-## 4- Results (CSV)
+## 5. Results (CSV)
 Result of the scan would be saved in a CSV file. You can manage the path of the output file by the argument `-o` or `--output`.
-![Results in CSV](img/result.png)
-![Results in CSV](img/result2.png)
+![Results in CSV](https://raw.githubusercontent.com/namnamir/domainia/main/img/result.png)
+![Results in CSV](https://raw.githubusercontent.com/namnamir/domainia/main/img/result2.png)
 
-## Copyright
-- This tool is released under copy left right. Read more about it on the LICENSE page.
-- The logo is from [Freepik - Flaticon](https://www.flaticon.com/free-icons/connector).
+---
+**Copyright**
+- This tool is released under copy left; there is no right. Read more about it on the [LICENSE page](LICENSE).
+- The logo is from [Freepik - Flaticon](https://www.flaticon.com/free-icons/connector) and the header image by [rawpixel.com](https://www.freepik.com/free-photo/man-using-digital-tablet-psd-mockup-smart-technology_16251062.htm?query=network&collectionId=3239128&&position=22&from_view=collections).
