@@ -78,4 +78,3 @@ Result of the scan would be saved in a CSV file. You can manage the path of the 
 ---
 **Copyright**
 - This tool is released under copy left; there is no right. Read more about it on the [LICENSE page](LICENSE).
-- The logo is from [Freepik - Flaticon](https://www.flaticon.com/free-icons/connector) and the header image by [rawpixel.com](https://www.freepik.com/free-photo/man-using-digital-tablet-psd-mockup-smart-technology_16251062.htm?query=network&collectionId=3239128&&position=22&from_view=collections).
