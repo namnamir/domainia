@@ -1,25 +1,33 @@
-[![PyPI](https://img.shields.io/pypi/v/domainia?style=flat-square)](https://pypi.org/project/Domainia/) ![GitHub last commit](https://img.shields.io/github/last-commit/namnamir/domainia?style=flat-square) [![GitHub issues](https://img.shields.io/github/issues-raw/namnamir/domainia?style=flat-square)](https://github.com/namnamir/domainia/issues) ![GitHub branch checks state](https://img.shields.io/github/checks-status/namnamir/domainia/main?style=flat-square) [![License](https://img.shields.io/github/license/namnamir/domainia?style=flat-square)](LICENSE) ![GitHub Sponsors](https://img.shields.io/github/sponsors/namnamir?style=flat-square)
+[![PyPI](https://img.shields.io/pypi/v/domainia?style=flat-square)](https://pypi.org/project/Domainia/) ![GitHub last commit](https://img.shields.io/github/last-commit/namnamir/domainia?style=flat-square) [![GitHub issues](https://img.shields.io/github/issues-raw/namnamir/domainia?style=flat-square)](https://github.com/namnamir/domainia/issues) ![GitHub branch checks state](https://img.shields.io/github/checks-status/namnamir/domainia/main?style=flat-square) [![License](https://img.shields.io/github/license/namnamir/domainia?style=flat-square)](LICENSE)
+Support Domainia
+![GitHub Sponsors](https://img.shields.io/github/sponsors/namnamir?style=flat-square) [![Liberapay patrons](https://img.shields.io/liberapay/patrons/namnamir?style=flat-square)](https://liberapay.com/namnamir/donate)
+
 
 <img src="img/logo.png" width="150px" align="right">
 
 **Domainia** Scanner is an automated Open-source Intelligence (OSINT) tool that enumerates subdomains, all DNS records, IP addresses, related domains/subdomains, certificate details, site info, HTTP status, name servers (NS), domain whois, and etc. of a single domain or a list of domains by using the passive and active reconnaissance techniques.
 
+<img src="img/logo2.png">
+
 ---
 # How to Use
 
 ## 1. Installation
-### 1.1. Installation Through [PyPi](https://pypi.org/project/Domainia/)
+### 1.1. Installation Through [PyPi](https://pypi.org/project/Domainia/) 
 [![PyPI](https://img.shields.io/pypi/v/domainia?style=flat-square)](https://pypi.org/project/Domainia/)
+
 If you would like to install it as a Python package, run the following command.
 ```bash
 pip install Domainia
+# or
+python -m pip install Domainia
 ```
-### 1.2. Non-package Usage
+### 1.2. Installation form the Source
 First, clone the package from Github.
 ```bash
 git clone https://github.com/namnamir/domainia.git
 ```
-Then, b1y running the following command, it will install all required dependencies for the current user.
+Then, by running the following command, install all required dependencies for the current user.
 ```Bash
 pip install requirements.txt --user
 ```

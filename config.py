@@ -138,7 +138,7 @@ config = {
             'api_key':     api_key_whoxy,
         },
         # SSL certificate api
-        'crt': {
+        'crt_sh': {
             'url1':        'https://crt.sh/?q={0}&output=json',
             'url2':        'https://crt.sh/?id={0}',
             'date_format': '%b %d %H:%M:%S %Y GMT',

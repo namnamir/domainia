@@ -9,10 +9,11 @@ from modules.utils import *
 # get the wohis of the domain form different sources
 def whois(domain, api):
     # call the WhoisXML API and parse data
-    def whoisxml(domain):
+    def whoisxml(whois, domain):
         # check if the whois API key is set
         if config['api']['whoisxml']['api_key'] == '':
             print('      │      ■ ' + Fore.RED + 'WhoisXML API key is not defined.' + Style.RESET_ALL)
+            return whois
         else:
             # call the API
             r = requests.get(config['api']['whoisxml']['url_whois'].format(config['api']['whoisxml']['api_key'], domain))
@@ -58,10 +59,11 @@ def whois(domain, api):
 
 
     # call the Whoxy API and parse data
-    def whoxy(domain):
+    def whoxy(whois, domain):
         # check if the whois API key is set
         if config['api']['whoxy']['api_key'] == '':
             print('      │      ■ ' + Fore.RED + 'Whoxy API key is not defined.' + Style.RESET_ALL)
+            return whois
         else:
             # call the API
             r = requests.get(config['api']['whoxy']['url_whois'].format(config['api']['whoxy']['api_key'], domain))
@@ -106,6 +108,7 @@ def whois(domain, api):
             return whois
 
 
+    # some variables
     i = 0
     whois = {
         'create_date': '',
@@ -145,50 +148,50 @@ def whois(domain, api):
     print('      ├───' + Fore.BLACK + Back.WHITE + ' Whois ' + Style.RESET_ALL)
 
     try:
-            # call the asked whois API
-            if api == 'whoisxml':
-                whois = whoisxml(domain)
-            elif api == 'whoxy':
-                whois = whoxy(domain)
-            else:
-                print(Fore.RED + '      │      ■ ' + Fore.RED + 'No valid Whois API is set.' + Style.RESET_ALL)
+        # call the asked whois API
+        if api == 'whoisxml':
+            whois = whoisxml(whois, domain)
+        elif api == 'whoxy':
+            whois = whoxy(whois, domain)
+        else:
+            print(Fore.RED + '      │      ■ ' + Fore.RED + 'No valid Whois API is set.' + Style.RESET_ALL)
 
-            # print the result on STDOUT
-            print('      │      ■ Registration Date:      ' + Fore.YELLOW + whois['create_date'] + Style.RESET_ALL)
-            print('      │      ■ Last Modification Date: ' + Fore.YELLOW + whois['update_date'] + Style.RESET_ALL)
-            print('      │      ■ Expiration Date:        ' + Fore.YELLOW + whois['expiration_date'] + Style.RESET_ALL)
-            print('      │      ■ Domain Age:             ' + Fore.YELLOW + str(whois['domain_age_days']) + ' Days' + Style.RESET_ALL)
-            print('      │      ' + Fore.CYAN + '■ Registrar Detains' + Style.RESET_ALL)
-            print('      └┐      ■■  Name:                ' + Fore.YELLOW + whois['registrar']['name'] + Style.RESET_ALL)
-            print('       │      ■■  IANA ID:             ' + Fore.YELLOW + str(whois['registrar']['iana_id']) + Style.RESET_ALL)
-            print('       │      ■■  Website:             ' + Fore.YELLOW + whois['registrar']['website'] + Style.RESET_ALL)
-            print('       │      ■■  Wohis Server:        ' + Fore.YELLOW + whois['registrar']['whois_server'] + Style.RESET_ALL)
-            print('       │      ■■  Email:               ' + Fore.YELLOW + whois['registrar']['email'] + Style.RESET_ALL)
-            print('      ┌┘      ■■  Phone:               ' + Fore.YELLOW + whois['registrar']['phone'] + Style.RESET_ALL)
-            print('      │      ' + Fore.CYAN + '■ Registrant Detains' + Style.RESET_ALL)
-            print('      └┐      ■■  Name:                ' + Fore.YELLOW + whois['registrant']['name'] + Style.RESET_ALL)
-            print('       │      ■■  Country:             ' + Fore.YELLOW + whois['registrant']['country'] + Style.RESET_ALL)
-            print('       │      ■■  Email:               ' + Fore.YELLOW + whois['registrant']['email'] + Style.RESET_ALL)
-            print('      ┌┘      ■■  Phone:               ' + Fore.YELLOW + whois['registrant']['phone'] + Style.RESET_ALL)
-            print('      │      ' + Fore.CYAN + '■ Administrative Detains' + Style.RESET_ALL)
-            print('      └┐      ■■  Name:                ' + Fore.YELLOW + whois['administrative']['name'] + Style.RESET_ALL)
-            print('       │      ■■  Country:             ' + Fore.YELLOW + whois['administrative']['country'] + Style.RESET_ALL)
-            print('       │      ■■  Email:               ' + Fore.YELLOW + whois['administrative']['email'] + Style.RESET_ALL)
-            print('      ┌┘      ■■  Phone:               ' + Fore.YELLOW + whois['administrative']['phone'] + Style.RESET_ALL)
-            print('      │      ' + Fore.CYAN + '■ Technical Detains' + Style.RESET_ALL)
-            print('      └┐      ■■  Name:                ' + Fore.YELLOW + whois['technical']['name'] + Style.RESET_ALL)
-            print('       │      ■■  Country:             ' + Fore.YELLOW + whois['technical']['country'] + Style.RESET_ALL)
-            print('       │      ■■  Email:               ' + Fore.YELLOW + whois['technical']['email'] + Style.RESET_ALL)
-            print('      ┌┘      ■■  Phone:               ' + Fore.YELLOW + whois['technical']['phone'] + Style.RESET_ALL)
-            print('      │      ' + Fore.CYAN + '■ Name Servers' + Style.RESET_ALL)
-            for ns in whois['name_servers']:
-                i += 1
-                if i == 1:
-                    print('      └┐      ■■  Nameserver {0}:         '.format(i) + Fore.YELLOW + ns + Style.RESET_ALL)
-                elif i == len(whois['name_servers']):
-                    print('      ┌┘      ■■  Nameserver {0}:         '.format(i) + Fore.YELLOW + ns + Style.RESET_ALL)
-                else:
-                    print('       │      ■■  Nameserver {0}:         '.format(i) + Fore.YELLOW + ns + Style.RESET_ALL)
+        # print the result on STDOUT
+        print('      │      ■ Registration Date:      ' + Fore.YELLOW + whois['create_date'] + Style.RESET_ALL)
+        print('      │      ■ Last Modification Date: ' + Fore.YELLOW + whois['update_date'] + Style.RESET_ALL)
+        print('      │      ■ Expiration Date:        ' + Fore.YELLOW + whois['expiration_date'] + Style.RESET_ALL)
+        print('      │      ■ Domain Age:             ' + Fore.YELLOW + str(whois['domain_age_days']) + ' Days' + Style.RESET_ALL)
+        print('      │      ' + Fore.CYAN + '■ Registrar Detains' + Style.RESET_ALL)
+        print('      └┐      ■■  Name:                ' + Fore.YELLOW + whois['registrar']['name'] + Style.RESET_ALL)
+        print('       │      ■■  IANA ID:             ' + Fore.YELLOW + str(whois['registrar']['iana_id']) + Style.RESET_ALL)
+        print('       │      ■■  Website:             ' + Fore.YELLOW + whois['registrar']['website'] + Style.RESET_ALL)
+        print('       │      ■■  Wohis Server:        ' + Fore.YELLOW + whois['registrar']['whois_server'] + Style.RESET_ALL)
+        print('       │      ■■  Email:               ' + Fore.YELLOW + whois['registrar']['email'] + Style.RESET_ALL)
+        print('      ┌┘      ■■  Phone:               ' + Fore.YELLOW + whois['registrar']['phone'] + Style.RESET_ALL)
+        print('      │      ' + Fore.CYAN + '■ Registrant Detains' + Style.RESET_ALL)
+        print('      └┐      ■■  Name:                ' + Fore.YELLOW + whois['registrant']['name'] + Style.RESET_ALL)
+        print('       │      ■■  Country:             ' + Fore.YELLOW + whois['registrant']['country'] + Style.RESET_ALL)
+        print('       │      ■■  Email:               ' + Fore.YELLOW + whois['registrant']['email'] + Style.RESET_ALL)
+        print('      ┌┘      ■■  Phone:               ' + Fore.YELLOW + whois['registrant']['phone'] + Style.RESET_ALL)
+        print('      │      ' + Fore.CYAN + '■ Administrative Detains' + Style.RESET_ALL)
+        print('      └┐      ■■  Name:                ' + Fore.YELLOW + whois['administrative']['name'] + Style.RESET_ALL)
+        print('       │      ■■  Country:             ' + Fore.YELLOW + whois['administrative']['country'] + Style.RESET_ALL)
+        print('       │      ■■  Email:               ' + Fore.YELLOW + whois['administrative']['email'] + Style.RESET_ALL)
+        print('      ┌┘      ■■  Phone:               ' + Fore.YELLOW + whois['administrative']['phone'] + Style.RESET_ALL)
+        print('      │      ' + Fore.CYAN + '■ Technical Detains' + Style.RESET_ALL)
+        print('      └┐      ■■  Name:                ' + Fore.YELLOW + whois['technical']['name'] + Style.RESET_ALL)
+        print('       │      ■■  Country:             ' + Fore.YELLOW + whois['technical']['country'] + Style.RESET_ALL)
+        print('       │      ■■  Email:               ' + Fore.YELLOW + whois['technical']['email'] + Style.RESET_ALL)
+        print('      ┌┘      ■■  Phone:               ' + Fore.YELLOW + whois['technical']['phone'] + Style.RESET_ALL)
+        print('      │      ' + Fore.CYAN + '■ Name Servers' + Style.RESET_ALL)
+        for ns in whois['name_servers']:
+            i += 1
+            if i == 1:
+                print('      └┐      ■■  Nameserver {0}:         '.format(i) + Fore.YELLOW + ns + Style.RESET_ALL)
+            elif i == len(whois['name_servers']):
+                print('      ┌┘      ■■  Nameserver {0}:         '.format(i) + Fore.YELLOW + ns + Style.RESET_ALL)
+            else:
+                print('       │      ■■  Nameserver {0}:         '.format(i) + Fore.YELLOW + ns + Style.RESET_ALL)
 
     except requests.exceptions.HTTPError as e:
         print('      │      ■ ' + Fore.RED + 'Error in loading the HTTP page.' + Style.RESET_ALL)

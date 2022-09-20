@@ -35,7 +35,7 @@ def ssl_parser(domain, scan_type):
 
     # get the type of the scan; quick or deep
     # if it is defined by stdin, the setting from the config file will be ignored
-    if scan_type != '':
+    if scan_type == '':
         scan_type = config['scan_type']['alt_domain_finder']
 
     # print out found SSL info
@@ -44,9 +44,10 @@ def ssl_parser(domain, scan_type):
     # find subdomains by parsing historical SSL certificates
     try:
         # download the certificate page on CRT
-        r = requests.get(config['api']['crt']['url1'].format(domain))
+        url = config['api']['crt_sh']['url1'].format(domain)
+        date_format = config['api']['crt_sh']['date_format']
+        r = requests.get(url)
         json_data = json.loads(r.text)
-        date_format = config['api']['crt']['date_format']
 
         # continue only if there is any data for it
         if json_data:
@@ -57,7 +58,8 @@ def ssl_parser(domain, scan_type):
                 # if it is a quick search, ignore loading each certificate
                 if (scan_type == "quick") and (i > 0):
                     break
-                cert = requests.get(config['api']['crt']['url2'].format(json_data[i]['id']))
+                url = config['api']['crt_sh']['url2'].format(json_data[i]['id'])
+                cert = requests.get(url)
                 # fix the HTML format of the space
                 cert = (cert.text).replace('&nbsp;',' ')
 
@@ -189,7 +191,8 @@ def ssl_parser(domain, scan_type):
     print('\r\n')
 
     # return list instead of set
-    return [ssl_info, 
-            sorted(subdomains), 
-            sorted(related_domains)
-           ]
+    return [
+        ssl_info, 
+        sorted(subdomains), 
+        sorted(related_domains)
+    ]

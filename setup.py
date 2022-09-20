@@ -19,7 +19,7 @@ setup_args = dict(
     keywords=[
         'dns', 'ssl', 'osint', 'certificate', 'ipv6', 'whois', 'ipv4', 
         'subdomain', 'ip', 'ssl-certificates', 'whois-lookup', 'certifi', 
-        'subdomain-scanner', 'subdomain-enumeration', 'osint-python'
+        'subdomain-scanner', 'subdomain-enumeration', 'osint-python', 'scanner'
     ],
     url='https://github.com/namnamir/domainia',
     download_url='https://pypi.org/project/domainia/'
