@@ -1,13 +1,12 @@
 [![PyPI](https://img.shields.io/pypi/v/domainia?style=flat-square)](https://pypi.org/project/Domainia/) ![GitHub last commit](https://img.shields.io/github/last-commit/namnamir/domainia?style=flat-square) [![GitHub issues](https://img.shields.io/github/issues-raw/namnamir/domainia?style=flat-square)](https://github.com/namnamir/domainia/issues) ![GitHub branch checks state](https://img.shields.io/github/checks-status/namnamir/domainia/main?style=flat-square) [![License](https://img.shields.io/github/license/namnamir/domainia?style=flat-square)](LICENSE)
-Support Domainia
-![GitHub Sponsors](https://img.shields.io/github/sponsors/namnamir?style=flat-square) [![Liberapay patrons](https://img.shields.io/liberapay/patrons/namnamir?style=flat-square)](https://liberapay.com/namnamir/donate)
 
-
-<img src="img/logo.png" width="150px" align="right">
+<img src="https://raw.githubusercontent.com/namnamir/domainia/main/img/logo.png" width="150px" align="right">
 
 **Domainia** Scanner is an automated Open-source Intelligence (OSINT) tool that enumerates subdomains, all DNS records, IP addresses, related domains/subdomains, certificate details, site info, HTTP status, name servers (NS), domain whois, and etc. of a single domain or a list of domains by using the passive and active reconnaissance techniques.
 
-<img src="img/logo2.png">
+❤ Support Domainia: ![GitHub Sponsors](https://img.shields.io/github/sponsors/namnamir?style=flat-square) [![Liberapay patrons](https://img.shields.io/liberapay/patrons/namnamir?style=flat-square)](https://liberapay.com/namnamir/donate)
+
+<img src="https://raw.githubusercontent.com/namnamir/domainia/main/img/logo2.png">
 
 ---
 # How to Use
@@ -77,4 +76,4 @@ Result of the scan would be saved in a CSV file. You can manage the path of the 
 
 ---
 **Copyright**
-- This tool is released under copy left; there is no right. Read more about it on the [LICENSE page](LICENSE).
+- This tool is released under copy left; there is no right. Read more about it on the [LICENSE page](https://github.com/namnamir/domainia/blob/main/LICENSE).

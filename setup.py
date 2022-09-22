@@ -8,7 +8,7 @@ with open('CHANGELOG.md') as changelog_file:
 
 setup_args = dict(
     name='Domainia',
-    version='1.1.0',
+    version='1.2.0',
     description='Domainia helps to find subdomains, DNS records, IP addresses, SSL Certificates, HTTP info, etc. of domain by doing the passive reconnaissance.',
     long_description=README + '\n\n' + CHANGELOG,
     long_description_content_type="text/markdown",

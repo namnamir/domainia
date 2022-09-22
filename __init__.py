@@ -25,7 +25,7 @@ if __name__ == '__main__':
 ----------------------------------------------------
             AN AUTOMATED DOMAIN SCANNER
 ----------------------------------------------------
-Version: 2.0
+Version: 1.2.0
 Source: https://github.com/namnamir/domainia
 
 """
@@ -130,6 +130,9 @@ Source: https://github.com/namnamir/domainia
             json_result[d]['dns_records'] = dns_resolver(d.replace(' ', ''))
             json_result[d]['whois'] = whois(d, whois_api)
             json_result[d]['ssl'], json_result[d]['subdomain'], json_result[d]['related_domain'] = ssl_parser(d, scan_type)
+
+            # print a message shows the scan for the domain is finished
+            print('      │\r\n      └───' + Fore.RED + Back.WHITE + ' THE END  ({0}) '.format(d) + Style.RESET_ALL + '\r\n')
 
             # compose the line
             line = []

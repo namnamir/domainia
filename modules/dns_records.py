@@ -1,6 +1,7 @@
 import dns.resolver
 from colorama import Fore, Back, Style
 from config import config
+from modules.ip_lookup import validate_ip, ip_lookup
 
 # resolve the DNS and get all the defined records
 def dns_resolver(domain):
@@ -10,7 +11,7 @@ def dns_resolver(domain):
     dns.resolver.Resolver().nameservers = config['dns_servers']
 
     # print the title of the section
-    print('      ├───' +  Fore.BLACK + Back.WHITE + ' DNS Records ' + Style.RESET_ALL)
+    print('      │\r\n      ├───' +  Fore.BLACK + Back.WHITE + ' DNS Records ' + Style.RESET_ALL)
         
     # iterate over records and resolve them
     for r in config['dns_records']:
@@ -35,14 +36,28 @@ def dns_resolver(domain):
                     temp.append(record)
                 
                 # print the result on STDOUT
+                l_start = '       │' # for printing IP lookups
                 if len(answers) == 1:
                     print('      ╞       ■■  ' + color + record + Style.RESET_ALL)
+                    l_start = '      │ '
                 elif i == 1:
                     print('      └┐      ■■  ' + color + record + Style.RESET_ALL)
                 elif i == len(answers):
                     print('      ┌┘      ■■  ' + color + record + Style.RESET_ALL)
+                    l_start = '      │ '
                 else:
                     print('       │      ■■  ' + color + record + Style.RESET_ALL)
+                
+                # print the IP lookup results, if the result is an IP
+                if validate_ip(record):
+                    l = ip_lookup(record)
+                    print(l_start + '              ├□ Location:    ' + Fore.CYAN + l['city'] + ', ' + l['country'] + Style.RESET_ALL)
+                    print(l_start + '              ├□ ISP Name:    ' + Fore.CYAN + l['isp'] + Style.RESET_ALL)
+                    print(l_start + '              ├□ Org. Name:   ' + Fore.CYAN + l['organization'] + Style.RESET_ALL)
+                    print(l_start + '              ├□ Reverse DNS: ' + Fore.CYAN + l['reverse_dns'] + Style.RESET_ALL)
+                    print(l_start + '              ├□ Is Mobile?   ' + Fore.CYAN + l['mobile'] + Style.RESET_ALL)
+                    print(l_start + '              ├□ Is Proxy?    ' + Fore.CYAN + l['proxy'] + Style.RESET_ALL)
+                    print(l_start + '              └□ Is Hosting?  ' + Fore.CYAN + l['hosting'] + Style.RESET_ALL)
 
             # add the result into the JSON
             records[r] = temp

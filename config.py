@@ -123,13 +123,15 @@ config = {
     # for date/time formats, check out 
     # https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
     'api': {
-        # whois lookup apis
+        # whois lookup APIs
         'whoisxml': {
-            'url_whois':   'https://www.whoisxmlapi.com/whoisserver/WhoisService?apiKey={0}&outputFormat=JSON&domainName={1}',
-            'url_dns':     'https://www.whoisxmlapi.com/whoisserver/DNSService?apiKey={0}&outputFormat=JSON&domainName={1}&type=_all',
-            'url_balance': 'https://user.whoisxmlapi.com/service/account-balance?apiKey={0}',
-            'date_format': '%Y-%m-%dT%H:%M:%SZ',
-            'api_key':     api_key_whoisxml,
+            'url_whois':       'https://www.whoisxmlapi.com/whoisserver/WhoisService?apiKey={0}&outputFormat=JSON&domainName={1}',
+            'url_dns':         'https://www.whoisxmlapi.com/whoisserver/DNSService?apiKey={0}&outputFormat=JSON&domainName={1}&type=_all',
+            'url_ip_geo':      'https://ip-geolocation.whoisxmlapi.com/api/v1?apiKey={0}&outputFormat=JSON&ipAddress={1}',
+            'url_reverse_ip':  'https://dns-history.whoisxmlapi.com/api/v1?apiKey={0}&outputFormat=JSON&ipAddress={1}',
+            'url_balance':     'https://user.whoisxmlapi.com/service/account-balance?apiKey={0}',
+            'date_format':     '%Y-%m-%dT%H:%M:%SZ',
+            'api_key':         api_key_whoisxml,
         },
         'whoxy': {
             'url_whois':   'https://api.whoxy.com/?key={0}&whois={1}&format=json',
@@ -137,11 +139,17 @@ config = {
             'date_format': '%Y-%m-%d',
             'api_key':     api_key_whoxy,
         },
-        # SSL certificate api
+        # SSL certificate API
         'crt_sh': {
-            'url1':        'https://crt.sh/?q={0}&output=json',
-            'url2':        'https://crt.sh/?id={0}',
+            'url_all':     'https://crt.sh/?q={0}&output=json',
+            'url_single':  'https://crt.sh/?id={0}',
             'date_format': '%b %d %H:%M:%S %Y GMT',
+        },
+        # IP whois lookup API
+        'ipapi': {
+            'url_lookup': 'http://ip-api.com/json/{0}?fields={1}',
+            # define fields you would like to get from the API
+            'fields':     'status,message,continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,mobile,proxy,hosting,query',
         },
     },
 }

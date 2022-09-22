@@ -39,12 +39,12 @@ def ssl_parser(domain, scan_type):
         scan_type = config['scan_type']['alt_domain_finder']
 
     # print out found SSL info
-    print('      ├───' + Fore.BLACK + Back.WHITE + ' SSL Certificate Data ' + Style.RESET_ALL)
+    print('      │\r\n      ├───' + Fore.BLACK + Back.WHITE + ' SSL Certificate Data ' + Style.RESET_ALL)
     
     # find subdomains by parsing historical SSL certificates
     try:
         # download the certificate page on CRT
-        url = config['api']['crt_sh']['url1'].format(domain)
+        url = config['api']['crt_sh']['url_all'].format(domain)
         date_format = config['api']['crt_sh']['date_format']
         r = requests.get(url)
         json_data = json.loads(r.text)
@@ -58,7 +58,7 @@ def ssl_parser(domain, scan_type):
                 # if it is a quick search, ignore loading each certificate
                 if (scan_type == "quick") and (i > 0):
                     break
-                url = config['api']['crt_sh']['url2'].format(json_data[i]['id'])
+                url = config['api']['crt_sh']['url_single'].format(json_data[i]['id'])
                 cert = requests.get(url)
                 # fix the HTML format of the space
                 cert = (cert.text).replace('&nbsp;',' ')
@@ -93,104 +93,108 @@ def ssl_parser(domain, scan_type):
                     }
 
             # if it is a quick search
-            if scan_type == "quick":
+            if scan_type == 'quick':
                 # iterate over the found results
                 for (key, value) in enumerate(json_data):
                     # aggregate all alternative names
-                    alt_names.update(value['name_value'].split("\n"))
+                    alt_names.update(value['name_value'].split('\n'))
 
+            # iterate over the found alternative names
+            for d in alt_names:
+                # ignore the main domain
+                if (d != domain):
+                    # find subdomains
+                    if d.endswith(domain):
+                        sd = d.split('.'+domain)[0]
+                        # remove wildcard signs
+                        if sd.startswith('*.'):
+                            sd = sd.split('*.')[1]
+                        elif sd.startswith('*'):
+                            continue
+                        subdomains.add(sd)
+                    # find related domains (not subdomain)
+                    else:
+                        if d.startswith('*.'):
+                            rd = d.split('*.')[1]
+                        else:
+                            rd = d
+                        related_domains.add(rd)
+
+            # remove the domain from the set
+            if domain in subdomains:
+                subdomains.remove(domain)
+        
         # if there is no SSL data            
         else:
             flag = False
-            
+
+        if ssl_info:
+            print('      │      ■ Issue Date:        ' + Fore.YELLOW + ssl_info['issue_date'] + Style.RESET_ALL)
+            print('      │      ■ Expiration Date:   ' + Fore.YELLOW + ssl_info['expiration_date'] + Style.RESET_ALL)
+            print('      │      ■ Signature:         ' + Fore.YELLOW + ssl_info['signature'] + Style.RESET_ALL)
+            print('      │      ■ Serial Number:     ' + Fore.YELLOW + ssl_info['serial_number'] + Style.RESET_ALL)
+            print('      │      ' + Fore.CYAN + '■ Issuer' + Style.RESET_ALL)
+            print('      └┐      ■■  Name:           ' + Fore.YELLOW + ssl_info['issuer']['common_name'] + Style.RESET_ALL)
+            print('       │      ■■  Org. Name:      ' + Fore.YELLOW + ssl_info['issuer']['organization_name'] + Style.RESET_ALL)
+            print('       │      ■■  Org. Unit Name: ' + Fore.YELLOW + ssl_info['issuer']['organization_unit_name'] + Style.RESET_ALL)
+            print('      ┌┘      ■■  Country:        ' + Fore.YELLOW + ssl_info['issuer']['country'] + Style.RESET_ALL)
+            print('      │      ' + Fore.CYAN + '■ Subject' + Style.RESET_ALL)
+            print('      └┐      ■■  Name:           ' + Fore.YELLOW + ssl_info['subject']['common_name'] + Style.RESET_ALL)
+            print('       │      ■■  Org. Name:      ' + Fore.YELLOW + ssl_info['subject']['organization_name'] + Style.RESET_ALL)
+            print('       │      ■■  Local Name:     ' + Fore.YELLOW + ssl_info['subject']['locality_name'] + Style.RESET_ALL)
+            print('      ┌┘      ■■  Country:        ' + Fore.YELLOW + ssl_info['subject']['country'] + Style.RESET_ALL)
+        elif flag:
+            print('      │      ■■ ' + Fore.RED + 'No SSL certificate info is found.' + Style.RESET_ALL)
+        else:
+            print('      │      ■ ' + Fore.RED + 'There is no SSL certificate to extract subdomains from.' + Style.RESET_ALL)
+
+        # print out found subdomains
+        print('      │\r\n      ├───' + Fore.BLACK + Back.WHITE + ' Subdomains ' + Style.RESET_ALL)
+        if subdomains:
+            for sd in subdomains:
+                print('      │      ■ ' + Fore.YELLOW + sd + Style.RESET_ALL)
+        elif flag:
+            print('      │      ■■ ' + Fore.RED + 'No subdomain is found.' + Style.RESET_ALL)
+        else:
+            print('      │      ■ ' + Fore.RED + 'There is no SSL certificate to extract subdomains from.' + Style.RESET_ALL)
+        
+        # print out found related domains
+        print('      │\r\n      ├───' + Fore.BLACK + Back.WHITE + ' Related (Sub)domains ' + Style.RESET_ALL)
+        if related_domains:
+            for rd in related_domains:
+                print('      │      ■ ' + Fore.YELLOW + rd + Style.RESET_ALL)
+        elif flag:
+            print('      │      ■■ ' + Fore.RED + 'No related domain is found.' + Style.RESET_ALL)
+        else:
+            print('      │      ■ ' + Fore.RED + 'There is no SSL certificate to extract related (sub)domains from.' + Style.RESET_ALL)
+
+    # exceptions
     except requests.exceptions.HTTPError as e:
-        print('      │      ■ ' + Fore.RED + 'Error in loading the HTTP page.')
+        print('      │      ■ ' + Fore.RED + 'Error in loading the SSL API URL page.' + Style.RESET_ALL)
         print('      │      ■■ ERROR: ' + Fore.RED + str(e) + Style.RESET_ALL)        
-        pass
     except requests.exceptions.ConnectionError as e:
-        print('      │      ■ ' + Fore.RED + 'Error in establishing the connection.' + Style.RESET_ALL)
+        print('      │      ■ ' + Fore.RED + 'Error in establishing the connection to the SSL API URL.' + Style.RESET_ALL)
         print('      │      ■■ ERROR: ' + Fore.RED + str(e) + Style.RESET_ALL)  
-        pass
     except requests.exceptions.Timeout as e:
         print('      │      ■ ' + Fore.RED + 'Timeout error.' + Style.RESET_ALL)
         print('      │      ■■ ERROR: ' + Fore.RED + str(e) + Style.RESET_ALL)  
-        pass
     except requests.exceptions.RequestException as e:
-        print('      │      ■ ' + Fore.RED + 'Error in reading the data from the API.' + Style.RESET_ALL)
+        print('      │      ■ ' + Fore.RED + 'Error in reading the data from the SSL API URL.' + Style.RESET_ALL)
+        print('      │      ■■ ERROR: ' + Fore.RED + str(e) + Style.RESET_ALL) 
+    except requests.exceptions.TooManyRedirects as e:
+        print('      │      ■ ' + Fore.RED + 'The provided SSL API URL does not seem correct.' + Style.RESET_ALL)
         print('      │      ■■ ERROR: ' + Fore.RED + str(e) + Style.RESET_ALL)
-        pass
+    except json.decoder.JSONDecodeError as e:
+        print('      │      ■ ' + Fore.RED + 'Error in reading the JSON data retrieved from the SSL API call.' + Style.RESET_ALL)
+        print('      │      ■■ ERROR: ' + Fore.RED + str(e) + Style.RESET_ALL)
     except ValueError as e:
-        print('      │      ■ ' + Fore.RED + 'Error in handling the JSON.' + Style.RESET_ALL)
-        print('      │      ■■ ERROR: ' + Fore.RED + str(e) + '\r\n' + Style.RESET_ALL)
-        pass
+        print('      │      ■ ' + Fore.RED + 'No Result is found or there was an error.' + Style.RESET_ALL)
+        print('      │      ■■ ERROR: ' + Fore.RED + str(e) + Style.RESET_ALL)
+    except Exception as e:
+        print('      │      ■ ' + Fore.RED + 'An unknown error is ocurred.' + Style.RESET_ALL)
+        print('      │      ■■ ERROR: ' + Fore.RED + str(e) + Style.RESET_ALL)
 
-    # iterate over the found alternative names
-    for d in alt_names:
-        # ignore the main domain
-        if (d != domain):
-            # find subdomains
-            if d.endswith(domain):
-                sd = d.split("."+domain)[0]
-                if sd.startswith("*."):
-                    sd = sd.split("*.")[1]
-                elif sd.startswith("*"):
-                    continue
-                subdomains.add(sd)
-            # find related domains (not subdomain)
-            else:
-                if d.startswith("*."):
-                    rd = d.split("*.")[1]
-                else:
-                    rd = d
-                related_domains.add(rd)
-
-    # remove the domain from the set
-    if domain in subdomains:
-        subdomains.remove(domain)
-
-    if ssl_info:
-        print('      │      ■ Issue Date:        ' + Fore.YELLOW + ssl_info['issue_date'] + Style.RESET_ALL)
-        print('      │      ■ Expiration Date:   ' + Fore.YELLOW + ssl_info['expiration_date'] + Style.RESET_ALL)
-        print('      │      ■ Signature:         ' + Fore.YELLOW + ssl_info['signature'] + Style.RESET_ALL)
-        print('      │      ■ Serial Number:     ' + Fore.YELLOW + ssl_info['serial_number'] + Style.RESET_ALL)
-        print('      │      ' + Fore.CYAN + '■ Issuer' + Style.RESET_ALL)
-        print('      └┐      ■■  Name:           ' + Fore.YELLOW + ssl_info['issuer']['common_name'] + Style.RESET_ALL)
-        print('       │      ■■  Org. Name:      ' + Fore.YELLOW + ssl_info['issuer']['organization_name'] + Style.RESET_ALL)
-        print('       │      ■■  Org. Unit Name: ' + Fore.YELLOW + ssl_info['issuer']['organization_unit_name'] + Style.RESET_ALL)
-        print('      ┌┘      ■■  Country:        ' + Fore.YELLOW + ssl_info['issuer']['country'] + Style.RESET_ALL)
-        print('      │      ' + Fore.CYAN + '■ Subject' + Style.RESET_ALL)
-        print('      └┐      ■■  Name:           ' + Fore.YELLOW + ssl_info['subject']['common_name'] + Style.RESET_ALL)
-        print('       │      ■■  Org. Name:      ' + Fore.YELLOW + ssl_info['subject']['organization_name'] + Style.RESET_ALL)
-        print('       │      ■■  Local Name:     ' + Fore.YELLOW + ssl_info['subject']['locality_name'] + Style.RESET_ALL)
-        print('      ┌┘      ■■  Country:        ' + Fore.YELLOW + ssl_info['subject']['country'] + Style.RESET_ALL)
-    elif flag:
-        print('      │      ■■ ' + Fore.RED + 'Nothing found as SSL certificate info.' + Style.RESET_ALL)
-    else:
-        print('      │      ■ ' + Fore.RED + 'There is no SSL certificate to extract subdomains from.' + Style.RESET_ALL)
-
-    # print out found subdomains
-    print('      ├───' + Fore.BLACK + Back.WHITE + ' Subdomains ' + Style.RESET_ALL)
-    if subdomains:
-        for sd in subdomains:
-            print('      │      ■ ' + Fore.YELLOW + sd + Style.RESET_ALL)
-    elif flag:
-        print('      │      ■■ ' + Fore.RED + 'Nothing as subdomain is found.' + Style.RESET_ALL)
-    else:
-        print('      │      ■ ' + Fore.RED + 'There is no SSL certificate to extract subdomains from.' + Style.RESET_ALL)
-    
-    # print out found related domains
-    print('      ├───' + Fore.BLACK + Back.WHITE + ' Related (Sub)domains ' + Style.RESET_ALL)
-    if related_domains:
-        for rd in related_domains:
-            print('      │      ■ ' + Fore.YELLOW + rd + Style.RESET_ALL)
-    elif flag:
-        print('      │      ■■ ' + Fore.RED + 'Nothing as related domain is found.' + Style.RESET_ALL)
-    else:
-        print('      │      ■ ' + Fore.RED + 'There is no SSL certificate to extract related (sub)domains from.' + Style.RESET_ALL)
-    print('      │\r\n      └───' + Fore.RED + Back.WHITE + ' THE END  ({0}) '.format(domain) + Style.RESET_ALL)
-    print('\r\n')
-
-    # return list instead of set
+    # return the result in the format of list instead of set
     return [
         ssl_info, 
         sorted(subdomains), 
