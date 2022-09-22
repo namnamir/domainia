@@ -10,6 +10,7 @@
 
 ---
 # How to Use
+If you look for the changelog history, you can find it [here](https://github.com/namnamir/domainia/blob/main/CHANGELOG.md).
 
 ## 1. Installation
 ### 1.1. Installation Through [PyPi](https://pypi.org/project/Domainia/) 
