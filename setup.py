@@ -2,19 +2,19 @@ from setuptools import setup, find_packages
 from pathlib import Path
 
 this_directory = Path(__file__).parent
+
 with open(this_directory / 'README.md', 'r', encoding='utf-8') as readme_file:
     README = readme_file.read()
-    print("&_1_&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
 
-with open(this_directory / 'CHANGELOG.md', 'r', encoding='utf-8') as changelog_file:
-    CHANGELOG = changelog_file.read()
-    print("&_2_&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+#with open(this_directory / 'CHANGELOG.md', 'r', encoding='utf-8') as changelog_file:
+#    CHANGELOG = changelog_file.read()
 
 setup_args = dict(
     name='Domainia',
     version='1.2.0',
     description='Domainia helps to find subdomains, DNS records, IP addresses, SSL Certificates, HTTP info, etc. of domain by doing the passive reconnaissance.',
     #long_description=README + '\r\n\r\n' + CHANGELOG,
+    long_description=README,
     long_description_content_type="text/markdown",
     license='MIT',
     packages=find_packages(),
