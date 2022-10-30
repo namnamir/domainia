@@ -1,9 +1,12 @@
 from setuptools import setup, find_packages
+from pathlib import Path
 
-with open('README.md') as readme_file:
+this_directory = Path(__file__).parent
+
+with open(this_directory / 'README.md', 'r', encoding='utf-8') as readme_file:
     README = readme_file.read()
 
-with open('CHANGELOG.md') as changelog_file:
+with open(this_directory / 'CHANGELOG.md', 'r', encoding='utf-8') as changelog_file:
     CHANGELOG = changelog_file.read()
 
 setup_args = dict(
@@ -22,7 +25,12 @@ setup_args = dict(
         'subdomain-scanner', 'subdomain-enumeration', 'osint-python', 'scanner'
     ],
     url='https://github.com/namnamir/domainia',
-    download_url='https://pypi.org/project/domainia/'
+    download_url='https://pypi.org/project/domainia/',
+    classifiers = [
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+    ],
 )
 
 install_requires = [
