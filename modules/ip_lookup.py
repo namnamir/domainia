@@ -1,8 +1,8 @@
+#!/usr/bin/env python
+
 import ipaddress
-import requests
-import json
-from colorama import Fore, Back, Style
 from config import config
+from modules.utils import run_requests
 
 
 # validate the Ipv4 or IPv6
@@ -19,9 +19,9 @@ def ip_lookup(ip):
     # call the IP-API and parse the data
     def ip_api(ip):
         # call the API
-        api = config['api']['ipapi']['url_lookup'].format(ip, config['api']['ipapi']['fields'])
-        r = requests.get(api)
-        json_data = json.loads(r.text)
+        print_args = [True, '      │      ■ ', '      │      ■■ ']
+        url = config['api']['ipapi']['url_lookup'].format(ip, config['api']['ipapi']['fields'])
+        json_data = run_requests(url, '', 'json', 'IP API', print_args)[0]
 
         # write the data
         ip_lookup = {
@@ -30,6 +30,7 @@ def ip_lookup(ip):
             'country': json_data['country'],
             'country_code': json_data['countryCode'],
             'region': json_data['regionName'],
+            'district': json_data['district'],
             'city': json_data['city'],
             'zip_code': json_data['zip'],
             'latitude': json_data['lat'],
@@ -49,59 +50,33 @@ def ip_lookup(ip):
         return ip_lookup
     
     
-    try:
-        # define some variables
-        ip_lookup = {
-            'continent': '',
-            'continent_code': '',
-            'country': '',
-            'country_code': '',
-            'region': '',
-            'city': '',
-            'zip_code': '',
-            'latitude': '',
-            'longitude': '',
-            'time_offset': '',
-            'offset': '',
-            'isp': '',
-            'organization': '',
-            'as_number': '',
-            'as_name': '',
-            'reverse_dns': '',
-            'mobile': '',
-            'proxy': '',
-            'hosting': ''
-        }
+    # define some variables
+    ip_lookup = {
+        'continent': '',
+        'continent_code': '',
+        'country': '',
+        'country_code': '',
+        'region': '',
+        'city': '',
+        'district': '',
+        'zip_code': '',
+        'latitude': '',
+        'longitude': '',
+        'time_offset': '',
+        'offset': '',
+        'isp': '',
+        'organization': '',
+        'as_number': '',
+        'as_name': '',
+        'reverse_dns': '',
+        'mobile': '',
+        'proxy': '',
+        'hosting': ''
+    }
 
-        # check if the ip is a valid one
-        if validate_ip(ip):
-            ip_lookup = ip_api(ip)
-
-    # exceptions
-    except requests.exceptions.HTTPError as e:
-        print('      │      ■ ' + Fore.RED + 'Error in loading the IP Lookup API URL page.' + Style.RESET_ALL)
-        print('      │      ■■ ERROR: ' + Fore.RED + str(e) + Style.RESET_ALL)        
-    except requests.exceptions.ConnectionError as e:
-        print('      │      ■ ' + Fore.RED + 'Error in establishing the connection to the IP Lookup API URL.' + Style.RESET_ALL)
-        print('      │      ■■ ERROR: ' + Fore.RED + str(e) + Style.RESET_ALL)  
-    except requests.exceptions.Timeout as e:
-        print('      │      ■ ' + Fore.RED + 'Timeout error.' + Style.RESET_ALL)
-        print('      │      ■■ ERROR: ' + Fore.RED + str(e) + Style.RESET_ALL)  
-    except requests.exceptions.RequestException as e:
-        print('      │      ■ ' + Fore.RED + 'Error in reading the data from the IP Lookup API URL.' + Style.RESET_ALL)
-        print('      │      ■■ ERROR: ' + Fore.RED + str(e) + Style.RESET_ALL) 
-    except requests.exceptions.TooManyRedirects as e:
-        print('      │      ■ ' + Fore.RED + 'The provided IP Lookup API URL does not seem correct.' + Style.RESET_ALL)
-        print('      │      ■■ ERROR: ' + Fore.RED + str(e) + Style.RESET_ALL)
-    except json.decoder.JSONDecodeError as e:
-        print('      │      ■ ' + Fore.RED + 'Error in reading the JSON data retrieved from the IP Lookup API call.' + Style.RESET_ALL)
-        print('      │      ■■ ERROR: ' + Fore.RED + str(e) + Style.RESET_ALL)
-    except ValueError as e:
-        print('      │      ■ ' + Fore.RED + 'No Result is found or there was an error.' + Style.RESET_ALL)
-        print('      │      ■■ ERROR: ' + Fore.RED + str(e) + Style.RESET_ALL)
-    except Exception as e:
-        print('      │      ■ ' + Fore.RED + 'An unknown error is ocurred.' + Style.RESET_ALL)
-        print('      │      ■■ ERROR: ' + Fore.RED + str(e) + Style.RESET_ALL)
+    # check if the ip is a valid one
+    if validate_ip(ip):
+        ip_lookup = ip_api(ip)
     
     # return the results in the format of set
     return ip_lookup

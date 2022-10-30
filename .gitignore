@@ -1,6 +1,10 @@
 # Result files except the sample one
 *.csv
-!results.csv
+*.json
+*.txt
+!sample_results.csv
+!sample_results.json
+!sample_results.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

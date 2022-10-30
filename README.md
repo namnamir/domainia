@@ -1,4 +1,4 @@
-[![PyPI](https://img.shields.io/pypi/v/domainia?style=flat-square)](https://pypi.org/project/Domainia/) ![GitHub last commit](https://img.shields.io/github/last-commit/namnamir/domainia?style=flat-square) [![GitHub issues](https://img.shields.io/github/issues-raw/namnamir/domainia?style=flat-square)](https://github.com/namnamir/domainia/issues) ![GitHub branch checks state](https://img.shields.io/github/checks-status/namnamir/domainia/main?style=flat-square) [![License](https://img.shields.io/github/license/namnamir/domainia?style=flat-square)](LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/domainia?style=flat-square)](https://pypi.org/project/Domainia/) ![GitHub last commit](https://img.shields.io/github/last-commit/namnamir/domainia?style=flat-square) [![CodeFactor](https://www.codefactor.io/repository/github/namnamir/domainia/badge)](https://www.codefactor.io/repository/github/namnamir/domainia) [![GitHub issues](https://img.shields.io/github/issues-raw/namnamir/domainia?style=flat-square)](https://github.com/namnamir/domainia/issues) ![GitHub branch checks state](https://img.shields.io/github/checks-status/namnamir/domainia/main?style=flat-square) [![License](https://img.shields.io/github/license/namnamir/domainia?style=flat-square)](LICENSE)
 
 <img src="https://raw.githubusercontent.com/namnamir/domainia/main/img/logo.png" width="150px" align="right">
 
@@ -76,5 +76,8 @@ Result of the scan would be saved in a CSV file. You can manage the path of the 
 ![Results in CSV](https://raw.githubusercontent.com/namnamir/domainia/main/img/result2.png)
 
 ---
-**Copyright**
-- This tool is released under copy left; there is no right. Read more about it on the [LICENSE page](https://github.com/namnamir/domainia/blob/main/LICENSE).
+⚖️ **Copyright**
+Domainia tool is released under copy left; there is no right. Just kidding, it is under MIT license; read more about it on the [LICENSE page](https://github.com/namnamir/domainia/blob/main/LICENSE).
+
+⚠️ **Disclaimer**
+Domainia tool is tool for legitimate purposes. Do not use it in any illegitimate or illegal activities.

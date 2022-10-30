@@ -8,9 +8,9 @@ with open('CHANGELOG.md') as changelog_file:
 
 setup_args = dict(
     name='Domainia',
-    version='1.2.0',
+    version='2.0.0',
     description='Domainia helps to find subdomains, DNS records, IP addresses, SSL Certificates, HTTP info, etc. of domain by doing the passive reconnaissance.',
-    long_description=README + '\r\n\r\n' + CHANGELOG,
+    long_description=README + '\n\n' + CHANGELOG,
     long_description_content_type="text/markdown",
     license='MIT',
     packages=find_packages(),
@@ -26,9 +26,11 @@ setup_args = dict(
 )
 
 install_requires = [
+    'beautifulsoup4==4.11.1',
     'colorama==0.4.5',
+    'cryptography==38.0.1',
     'dnspython==2.2.1',
-    'requests==2.28.1'
+    'requests==2.28.1',
 ]
 
 if __name__ == '__main__':

@@ -1,19 +1,14 @@
-import requests
-import json
+#!/usr/bin/env python
+
 import re
 from colorama import Fore, Back, Style
 from config import config
-from modules.utils import *
+from modules.utils import run_requests, re_position, date_formatter, printer
 
 
-# parse the SSL and find the domains and subdomains with the same
-# ssl certificate. It also goes historically
-def ssl_parser(domain, scan_type):
+# parse the SSL certificate
+def ssl_parser(domain):
     # some variables
-    subdomains = set()
-    related_domains = set()
-    alt_names = set()
-    flag = True
     ssl_info = {
         'issue_date': '',
         'expiration_date': '',
@@ -33,170 +28,75 @@ def ssl_parser(domain, scan_type):
         }
     }
 
-    # get the type of the scan; quick or deep
-    # if it is defined by stdin, the setting from the config file will be ignored
-    if scan_type == '':
-        scan_type = config['scan_type']['alt_domain_finder']
-
     # print out found SSL info
-    print('      │\r\n      ├───' + Fore.BLACK + Back.WHITE + ' SSL Certificate Data ' + Style.RESET_ALL)
+    printer('      │\n      ├───' + Fore.BLACK + Back.WHITE + ' SSL Certificate Details ' + Style.RESET_ALL)
     
-    # find subdomains by parsing historical SSL certificates
+    # get the date format of the crt.sh from the config file
+    date_format = config['api']['crt_sh']['date_format']
+    # set the print arguments for the function "run_requests"
+    print_args = [True, '      │      ■ ', '      │      ■■ ']
+
+    # download the certificate page on CRT
     try:
-        # download the certificate page on CRT
-        url = config['api']['crt_sh']['url_all'].format(domain)
-        date_format = config['api']['crt_sh']['date_format']
-        r = requests.get(url)
-        json_data = json.loads(r.text)
+        printer('      │        ├□ ' + Fore.GREEN + 'CRT.sh API is calling' + Style.RESET_ALL)
+        url = config['api']['crt_sh']['url'].format(domain)
+        json_data = run_requests(url, '', 'json', 'Crt.sh API', print_args)
+    except:
+        printer('      │        ├──■ ' + Fore.RED + 'Error in getting the list of SSL certificates.' + Style.RESET_ALL)
+        return ssl_info
 
-        # continue only if there is any data for it
-        if json_data:
-            json_data = sorted(json_data, key=lambda k: k['id'], reverse=True)
-            
-            # iterate over each issued certificate (cert history)
-            for i in range(0, len(json_data)):
-                # if it is a quick search, ignore loading each certificate
-                if (scan_type == "quick") and (i > 0):
-                    break
-                url = config['api']['crt_sh']['url_single'].format(json_data[i]['id'])
-                cert = requests.get(url)
-                # fix the HTML format of the space
-                cert = (cert.text).replace('&nbsp;',' ')
+    # continue only if there is any data for it
+    if json_data:
+        # sort certificates by ID to get the details of the latest one
+        json_data = sorted(json_data, key=lambda k: k['id'], reverse=True)
 
-                # print the progress
-                print('      │      ■■■■  ' + Fore.GREEN + \
-                      '{0} cert(s) out of {1} certificates is loaded '.format(i+1, len(json_data)) + Fore.CYAN + \
-                      '({0}%)'.format(str(round((i+1)/len(json_data) * 100))) + Fore.WHITE + ' ■■■■' + Style.RESET_ALL)
+        try:
+            url = config['api']['crt_sh']['url_single'].format(json_data[0]['id'])
+            cert = run_requests(url, '', 'text', 'Crt.sh API', print_args)
+        except:
+            printer('      │      ■■ ' + Fore.RED + 'Error in parsing the SSL certificate.' + Style.RESET_ALL)
+            return ssl_info
 
-                # aggregate all alternative names
-                alt_names.update(re.findall(r"DNS:(.*?)<BR>", cert))
+        # fix the HTML format of the space
+        cert = (cert.text).replace('&nbsp;', ' ')
 
-                # get the latest info of the certificate; ignore older details
-                if i == 0:
-                    ssl_info = {
-                        'issue_date':      date_formatter(re_position(re.findall(r"Not Before[ =:]*(.*?)<BR>", cert), 0), date_format),
-                        'expiration_date': date_formatter(re_position(re.findall(r"Not After[ =:]*(.*?)<BR>", cert), 0), date_format),
-                        'signature':       re_position(re.findall(r"Signature Algorithm[ :]*(.*?)<BR>", cert), 0),
-                        'serial_number':   re_position(re.findall(r"Serial Number[ :]<\/A><BR>[ =]*(.*?)<BR>", cert), 0),
-                        'issuer': {
-                            'common_name':            re_position(re.findall(r"commonName[ =]*(.*?)<BR>", cert), 0),
-                            'organization_name':      re_position(re.findall(r"organizationName[ =]*(.*?)<BR>", cert), 0),
-                            'country':                re_position(re.findall(r"countryName[ =]*(.*?)<BR>", cert), 0),
-                            'organization_unit_name': re_position(re.findall(r"organizationalUnitName[ =]*(.*?)<BR>", cert), 0),
-                        },
-                        'subject': {
-                            'common_name':       re_position(re.findall(r"commonName[ =]*(.*?)<BR>", cert), 1),
-                            'organization_name': re_position(re.findall(r"organizationName[ =]*(.*?)<BR>", cert), 1),
-                            'country':           re_position(re.findall(r"countryName[ =]*(.*?)<BR>", cert), 1),
-                            'locality_name':     re_position(re.findall(r"localityName[ =]*(.*?)<BR>", cert), 0),
-                        },
-                    }
-
-            # if it is a quick search
-            if scan_type == 'quick':
-                # iterate over the found results
-                for (key, value) in enumerate(json_data):
-                    # aggregate all alternative names
-                    alt_names.update(value['name_value'].split('\n'))
-
-            # iterate over the found alternative names
-            for d in alt_names:
-                # ignore the main domain
-                if (d != domain):
-                    # find subdomains
-                    if d.endswith(domain):
-                        sd = d.split('.'+domain)[0]
-                        # remove wildcard signs
-                        if sd.startswith('*.'):
-                            sd = sd.split('*.')[1]
-                        elif sd.startswith('*'):
-                            continue
-                        subdomains.add(sd)
-                    # find related domains (not subdomain)
-                    else:
-                        if d.startswith('*.'):
-                            rd = d.split('*.')[1]
-                        else:
-                            rd = d
-                        related_domains.add(rd)
-
-            # remove the domain from the set
-            if domain in subdomains:
-                subdomains.remove(domain)
-        
-        # if there is no SSL data            
-        else:
-            flag = False
-
-        if ssl_info:
-            print('      │      ■ Issue Date:        ' + Fore.YELLOW + ssl_info['issue_date'] + Style.RESET_ALL)
-            print('      │      ■ Expiration Date:   ' + Fore.YELLOW + ssl_info['expiration_date'] + Style.RESET_ALL)
-            print('      │      ■ Signature:         ' + Fore.YELLOW + ssl_info['signature'] + Style.RESET_ALL)
-            print('      │      ■ Serial Number:     ' + Fore.YELLOW + ssl_info['serial_number'] + Style.RESET_ALL)
-            print('      │      ' + Fore.CYAN + '■ Issuer' + Style.RESET_ALL)
-            print('      └┐      ■■  Name:           ' + Fore.YELLOW + ssl_info['issuer']['common_name'] + Style.RESET_ALL)
-            print('       │      ■■  Org. Name:      ' + Fore.YELLOW + ssl_info['issuer']['organization_name'] + Style.RESET_ALL)
-            print('       │      ■■  Org. Unit Name: ' + Fore.YELLOW + ssl_info['issuer']['organization_unit_name'] + Style.RESET_ALL)
-            print('      ┌┘      ■■  Country:        ' + Fore.YELLOW + ssl_info['issuer']['country'] + Style.RESET_ALL)
-            print('      │      ' + Fore.CYAN + '■ Subject' + Style.RESET_ALL)
-            print('      └┐      ■■  Name:           ' + Fore.YELLOW + ssl_info['subject']['common_name'] + Style.RESET_ALL)
-            print('       │      ■■  Org. Name:      ' + Fore.YELLOW + ssl_info['subject']['organization_name'] + Style.RESET_ALL)
-            print('       │      ■■  Local Name:     ' + Fore.YELLOW + ssl_info['subject']['locality_name'] + Style.RESET_ALL)
-            print('      ┌┘      ■■  Country:        ' + Fore.YELLOW + ssl_info['subject']['country'] + Style.RESET_ALL)
-        elif flag:
-            print('      │      ■■ ' + Fore.RED + 'No SSL certificate info is found.' + Style.RESET_ALL)
-        else:
-            print('      │      ■ ' + Fore.RED + 'There is no SSL certificate to extract subdomains from.' + Style.RESET_ALL)
-
-        # print out found subdomains
-        print('      │\r\n      ├───' + Fore.BLACK + Back.WHITE + ' Subdomains ' + Style.RESET_ALL)
-        if subdomains:
-            for sd in subdomains:
-                print('      │      ■ ' + Fore.YELLOW + sd + Style.RESET_ALL)
-        elif flag:
-            print('      │      ■■ ' + Fore.RED + 'No subdomain is found.' + Style.RESET_ALL)
-        else:
-            print('      │      ■ ' + Fore.RED + 'There is no SSL certificate to extract subdomains from.' + Style.RESET_ALL)
-        
-        # print out found related domains
-        print('      │\r\n      ├───' + Fore.BLACK + Back.WHITE + ' Related (Sub)domains ' + Style.RESET_ALL)
-        if related_domains:
-            for rd in related_domains:
-                print('      │      ■ ' + Fore.YELLOW + rd + Style.RESET_ALL)
-        elif flag:
-            print('      │      ■■ ' + Fore.RED + 'No related domain is found.' + Style.RESET_ALL)
-        else:
-            print('      │      ■ ' + Fore.RED + 'There is no SSL certificate to extract related (sub)domains from.' + Style.RESET_ALL)
-
-    # exceptions
-    except requests.exceptions.HTTPError as e:
-        print('      │      ■ ' + Fore.RED + 'Error in loading the SSL API URL page.' + Style.RESET_ALL)
-        print('      │      ■■ ERROR: ' + Fore.RED + str(e) + Style.RESET_ALL)        
-    except requests.exceptions.ConnectionError as e:
-        print('      │      ■ ' + Fore.RED + 'Error in establishing the connection to the SSL API URL.' + Style.RESET_ALL)
-        print('      │      ■■ ERROR: ' + Fore.RED + str(e) + Style.RESET_ALL)  
-    except requests.exceptions.Timeout as e:
-        print('      │      ■ ' + Fore.RED + 'Timeout error.' + Style.RESET_ALL)
-        print('      │      ■■ ERROR: ' + Fore.RED + str(e) + Style.RESET_ALL)  
-    except requests.exceptions.RequestException as e:
-        print('      │      ■ ' + Fore.RED + 'Error in reading the data from the SSL API URL.' + Style.RESET_ALL)
-        print('      │      ■■ ERROR: ' + Fore.RED + str(e) + Style.RESET_ALL) 
-    except requests.exceptions.TooManyRedirects as e:
-        print('      │      ■ ' + Fore.RED + 'The provided SSL API URL does not seem correct.' + Style.RESET_ALL)
-        print('      │      ■■ ERROR: ' + Fore.RED + str(e) + Style.RESET_ALL)
-    except json.decoder.JSONDecodeError as e:
-        print('      │      ■ ' + Fore.RED + 'Error in reading the JSON data retrieved from the SSL API call.' + Style.RESET_ALL)
-        print('      │      ■■ ERROR: ' + Fore.RED + str(e) + Style.RESET_ALL)
-    except ValueError as e:
-        print('      │      ■ ' + Fore.RED + 'No Result is found or there was an error.' + Style.RESET_ALL)
-        print('      │      ■■ ERROR: ' + Fore.RED + str(e) + Style.RESET_ALL)
-    except Exception as e:
-        print('      │      ■ ' + Fore.RED + 'An unknown error is ocurred.' + Style.RESET_ALL)
-        print('      │      ■■ ERROR: ' + Fore.RED + str(e) + Style.RESET_ALL)
+        # get the latest info of the latest certificate
+        ssl_info = {
+            'issue_date': date_formatter(re_position(re.findall(r"Not Before[ =:]*(.*?)<BR>", cert), 0), date_format),
+            'expiration_date': date_formatter(re_position(re.findall(r"Not After[ =:]*(.*?)<BR>", cert), 0), date_format),
+            'signature': re_position(re.findall(r"Signature Algorithm[ :]*(.*?)<BR>", cert), 0),
+            'serial_number': re_position(re.findall(r"Serial Number[ :]<\/A><BR>[ =]*(.*?)<BR>", cert), 0),
+            'issuer': {
+                'common_name': re_position(re.findall(r"commonName[ =]*(.*?)<BR>", cert), 0),
+                'organization_name': re_position(re.findall(r"organizationName[ =]*(.*?)<BR>", cert), 0),
+                'country': re_position(re.findall(r"countryName[ =]*(.*?)<BR>", cert), 0),
+                'organization_unit_name': re_position(re.findall(r"organizationalUnitName[ =]*(.*?)<BR>", cert), 0),
+            },
+            'subject': {
+                'common_name': re_position(re.findall(r"commonName[ =]*(.*?)<BR>", cert), 1),
+                'organization_name': re_position(re.findall(r"organizationName[ =]*(.*?)<BR>", cert), 1),
+                'country': re_position(re.findall(r"countryName[ =]*(.*?)<BR>", cert), 1),
+                'locality_name': re_position(re.findall(r"localityName[ =]*(.*?)<BR>", cert), 0),
+            },
+        }
+    
+        # print the results
+        printer('      │      ■ Issue Date: ' + Fore.YELLOW + ssl_info['issue_date'] + Style.RESET_ALL)
+        printer('      │      ■ Expiration Date: ' + Fore.YELLOW + ssl_info['expiration_date'] + Style.RESET_ALL)
+        printer('      │      ■ Signature: ' + Fore.YELLOW + ssl_info['signature'] + Style.RESET_ALL)
+        printer('      │      ■ Serial Number: ' + Fore.YELLOW + ssl_info['serial_number'] + Style.RESET_ALL)
+        printer('      │      ' + Fore.CYAN + '■ Issuer' + Style.RESET_ALL)
+        printer('      └┐      ■■  Name: ' + Fore.YELLOW + ssl_info['issuer']['common_name'] + Style.RESET_ALL)
+        printer('       │      ■■  Org. Name: ' + Fore.YELLOW + ssl_info['issuer']['organization_name'] + Style.RESET_ALL)
+        printer('       │      ■■  Org. Unit Name: ' + Fore.YELLOW + ssl_info['issuer']['organization_unit_name'] + Style.RESET_ALL)
+        printer('      ┌┘      ■■  Country: ' + Fore.YELLOW + ssl_info['issuer']['country'] + Style.RESET_ALL)
+        printer('      │      ' + Fore.CYAN + '■ Subject' + Style.RESET_ALL)
+        printer('      └┐      ■■  Name: ' + Fore.YELLOW + ssl_info['subject']['common_name'] + Style.RESET_ALL)
+        printer('       │      ■■  Org. Name: ' + Fore.YELLOW + ssl_info['subject']['organization_name'] + Style.RESET_ALL)
+        printer('       │      ■■  Local Name: ' + Fore.YELLOW + ssl_info['subject']['locality_name'] + Style.RESET_ALL)
+        printer('      ┌┘      ■■  Country: ' + Fore.YELLOW + ssl_info['subject']['country'] + Style.RESET_ALL)
+    else:
+        printer('      │      ■■ ' + Fore.RED + 'No SSL certificate detail is found.' + Style.RESET_ALL)
 
     # return the result in the format of list instead of set
-    return [
-        ssl_info, 
-        sorted(subdomains), 
-        sorted(related_domains)
-    ]
+    return ssl_info
