@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 
+## [2.0.1] - 2022-10-30
+### Fixed
+- The version number was fixed.
+
 ## [2.0.0] - 2022-10-30
 ### Fixed
 - N/A
@@ -40,6 +44,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Removed
 - Remove subdomain and related domain sections of `ssl_parser.py` and add to the `subdomain_finder.py` module.
 
+----
 
 ## [1.2.0] - 2022-09-22
 ### Fixed
