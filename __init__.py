@@ -6,6 +6,7 @@ from colorama import init, Fore, Back, Style
 from time import sleep
 from config import config
 
+from setup import setup_args
 from modules.whois import whois
 from modules.html_status import site_status
 from modules.ssl_parser import ssl_parser
@@ -33,10 +34,14 @@ if __name__ == '__main__':
 ----------------------------------------------------
             AN AUTOMATED DOMAIN SCANNER
 ----------------------------------------------------
-Version: 2.0.0
-Source: https://github.com/namnamir/domainia
+ Version: {0}
+ Source:  {1}
+ PyPI:    {2}
+ By:      {3} ({4})
+----------------------------------------------------
 
-"""
+""".format(setup_args['version'], setup_args['url'], setup_args['download_url'], setup_args['author'], setup_args['author_email'])
+
     # a variable to store data in the JSON format
     json_result = {}
 

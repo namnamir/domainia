@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [2.0.1] - 2022-10-30
 ### Fixed
 - The version number was fixed.
+- The version details are imported from `setup.py`.
 
 ## [2.0.0] - 2022-10-30
 ### Fixed
