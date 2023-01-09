@@ -19,9 +19,6 @@ def txt_writer(file_name):
             from modules.utils import all_prints
             output_file.write(all_prints)
 
-        # close the file
-        output_file.close()
-
     except IOError:
         ex = exception_report()
         print('      │ ■ ' + Fore.RED + 'Error in in I/O (input/output).' + Style.RESET_ALL)
@@ -44,4 +41,4 @@ def txt_writer(file_name):
             print('      │ ■■ ' + 'ERROR: ' + Fore.MAGENTA + ex[0] + ' → ' + ex[4] + ':' + ex[3] + Fore.RED + '  ' + ex[1] + Style.RESET_ALL)
     finally:
         # print a message shows the scan for the domain is finished
-        print('      │\n      └───' + Fore.RED + Back.WHITE + ' Finish Writing in "{0}" '.format(file_name) + Style.RESET_ALL + '\n')
+        print('      │\n      └──' + Fore.RED + Back.WHITE + ' Finish Writing in "{0}" '.format(file_name) + Style.RESET_ALL + '\n')

@@ -22,9 +22,6 @@ def json_writer(file_name, json_data):
             # s = json.dumps(json_data)
             # print(s)
             output_file.write(str(json_data))
-        
-        # close the file
-        output_file.close()
 
     except IOError:
         ex = exception_report()
@@ -48,4 +45,4 @@ def json_writer(file_name, json_data):
             printer('      │ ■■ ' + 'ERROR: ' + Fore.MAGENTA + ex[0] + ' → ' + ex[4] + ':' + ex[3] + Fore.RED + '  ' + ex[1] + Style.RESET_ALL)
     finally:
         # print a message shows the scan for the domain is finished
-        printer('      │\n      └───' + Fore.RED + Back.WHITE + ' Finish Writing in "{0}" '.format(file_name) + Style.RESET_ALL + '\n')
+        printer('      │\n      └──' + Fore.RED + Back.WHITE + ' Finish Writing in "{0}" '.format(file_name) + Style.RESET_ALL + '\n')

@@ -5,6 +5,7 @@ import random
 import re
 from colorama import Fore, Back, Style
 from time import sleep
+
 from config import config
 from modules.utils import run_requests, printer
 
@@ -66,10 +67,7 @@ def subdomain_finder(domain, scan_type, existing_subdomains):
             # download the result page of Security Trials
             url = config['api']['security_trails']['url_subdomain'].format(domain)
             api_key = config['api']['security_trails']['api_key']
-            headers = {
-                'User-Agent': random.choice(config['user_agents']),
-                'APIKEY': api_key
-            }
+            headers = {'APIKEY': api_key}
             result = run_requests(url, headers, 'json', 'Security Trails API', print_args)[0]
             subdomains = set(result['subdomains'])
 
@@ -83,9 +81,9 @@ def subdomain_finder(domain, scan_type, existing_subdomains):
         alt_names = set()
 
         # get the type of the scan; quick or deep
-        # if it is defined by stdin, the setting from the config file will be ignored
+        # if it is defined by STDIN, the setting from the config file will be ignored
         if scan_type == '':
-            scan_type = config['scan_type']['alt_domain_finder']
+            scan_type = config['scan_type']['ssl']
         
         # print the subtitle: crt.sh
         printer('      │        ├□ ' + Fore.GREEN + 
@@ -208,36 +206,19 @@ def subdomain_finder(domain, scan_type, existing_subdomains):
 
     # get subdomains and related domains
     sub_sm, rel_sm, sub_cr, rel_cr, sub_ht ,sub_st, sub_dh = '', '', '', '', '', '', ''
-    try:
-        sub_ht = hacker_target(domain)
-    except:
-        pass
-    try:
-        sub_st = security_trails(domain)
-    except:
-        pass
-    try:
-        sub_dh = dns_history(domain)
-    except:
-        pass
-    try:
-        sub_cr, rel_cr = crt_sh(domain, scan_type)
-    except:
-        pass
-    try:
-        sub_sm, rel_sm = ssl_mate(domain)
-    except:
-        pass
+
+    sub_ht = hacker_target(domain)
+    sub_st = security_trails(domain)
+    sub_dh = dns_history(domain)
+    sub_cr, rel_cr = crt_sh(domain, scan_type)
+    sub_sm, rel_sm = ssl_mate(domain)
 
     # join results
-    try:
-        subdomains = sub_ht.union(sub_st)
-        subdomains.update(sub_cr)
-        subdomains.update(sub_sm)
-        subdomains.update(sub_dh)
-        related_domains = rel_sm.union(rel_cr)
-    except:
-        pass
+    subdomains = sub_ht.union(sub_st)
+    subdomains.update(sub_cr)
+    subdomains.update(sub_sm)
+    subdomains.update(sub_dh)
+    related_domains = rel_sm.union(rel_cr)
 
     # remove the domain from the set
     if subdomains and (domain in subdomains):

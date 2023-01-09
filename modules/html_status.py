@@ -1,101 +1,131 @@
 #!/usr/bin/env python
 
-import re
-from colorama import Fore, Back, Style
-from modules.dnsbl import dsn_blocklist
-from modules.utils import dns_resolver, run_requests, printer
 
-# get the basic site status
+"""
+
+"""
+
+
+from bs4 import BeautifulSoup
+from colorama import Fore, Back, Style
+import re
+
+from modules.utils import run_requests, printer, print_error
+
+
 def site_status(domain):
-    results = {}
+    html_data = dict()
+    html_data['meta'] = dict()
+    html_data['http_headers'] = dict()
+    html_data['redirects'] = ''
+    html_data['analytics'] = dict()
 
     # print the title of the section
-    printer('      ├───' +  Fore.BLACK + Back.WHITE + ' General Info ' + Style.RESET_ALL)
-    # set the print arguments for the function "run_requests"
-    print_args = [True, '      │      ■ ', '      │      ■■ ']
+    printer(f'      ├───{Fore.BLACK}{Back.WHITE} General Info {Style.RESET_ALL}')
 
-    # open the domain
-    try:
-        text_data, status_code, history, headers = run_requests('http://' + domain, '', 'http', 'General Site Status', print_args)
-        if status_code != 200:
-            printer('      │      ' + Fore.RED + '■ Could not parse the HTML page.' + Style.RESET_ALL)
-            printer('      │      ■■ Content:     ' + Fore.YELLOW + text_data + Style.RESET_ALL)
-            printer('      │      ■■ Status Code: ' + Fore.YELLOW + status_code + Style.RESET_ALL)
-            printer('      │      ■■ History:     ' + Fore.YELLOW + history + Style.RESET_ALL)
-            printer('      │      ■■ Headers:     ' + Fore.YELLOW + headers + Style.RESET_ALL)
-            return results
-    except:
-        return results
+    # open the page
+    text_data, \
+    status_code, \
+    history, \
+    headers, \
+    version = run_requests(
+        'GET', 'http://' + domain, '', '', '', 'text', 'General Site Status'
+    )
+    
+    
+    # continues only if there is no error; HTTP status code 2xx and 3xx
+    if status_code < 200 or status_code >= 400:
+        texts = [
+            f'Could not parse the HTML page.',
+            f'HTML Status Code: {status_code}',
+            f'History: {history}',
+            f'HTTP Headers: {headers}',
+            f'Request Result: text_data'
+        ]
+        print_error(True, texts)
+
+        return html_data
 
     # get redirects
-    redirect = ''
     if history:
-        redirect = domain
+        html_data['redirects'] += domain
         for step in history:
-            redirect += ' → ' + step.url
-    
+            html_data['redirects'] += ' ➜ ' + step.url
+
     # parse the data and write into a dict variable
-    text_data = text_data.text
-    results = {
-        'title': ''.join(re.findall('<title>(.*?)</title>', text_data, re.IGNORECASE)),
-        'google_ua': ''.join(re.findall('[\s"\']+(UA-[\d\-]*)["|\'\s]+', text_data, re.IGNORECASE)),
-        'status_code': str(status_code),
-        'redirect': redirect,
-        'meta': {
-            'description': ''.join(re.findall('<meta\s*name\s*=[\s"\']+description[\s"\']+content\s*=[\s"\']*(.*?)["|\'\s]*>', text_data, re.IGNORECASE)),
-            'keywords': ''.join(re.findall('<meta\s*name\s*=[\s"\']+keywords[\s"\']+content\s*=[\s"\']*(.*?)["|\'\s]*>', text_data, re.IGNORECASE)),
-            'robots': ''.join(re.findall('<meta\s*name\s*=[\s"\']+robots[\s"\']+content\s*=[\s"\']*(.*?)["|\'\s]*>', text_data, re.IGNORECASE)),
-            'twitter_site': ''.join(re.findall('<meta\s*property\s*=[\s"\']+twitter:site[\s"\']+content\s*=[\s"\']*(.*?)["|\'\s]*>', text_data, re.IGNORECASE)),
-            'twitter_author': ''.join(re.findall('<meta\s*property\s*=[\s"\']+twitter:creator[\s"\']+content\s*=[\s"\']*(.*?)["|\'\s]*>', text_data, re.IGNORECASE)),
-            'facebook_site': ''.join(re.findall('<meta\s*property\s*=[\s"\']+article:publisher[\s"\']+content\s*=[\s"\']*(.*?)["|\'\s]*>', text_data, re.IGNORECASE)),
-            'facebook_author': ''.join(re.findall('<meta\s*property\s*=[\s"\']+article:author[\s"\']+content\s*=[\s"\']*(.*?)["|\'\s]*>', text_data, re.IGNORECASE)),
-            'canonical': ''.join(re.findall('<meta\s*rel\s*=[\s"\']+canonical[\s"\']+href\s*=[\s"\']*(.*?)["|\'\s]*>', text_data, re.IGNORECASE)),
-        },
-    }
-    # get the blocklisted IPs and domain name
-    try:
-        results['blocked_domain'] = dsn_blocklist(domain, 'domain')
-        results['blocked_ip'] = dsn_blocklist(dns_resolver(domain, 'A', print_args), 'ipv4') + \
-                                dsn_blocklist(dns_resolver(domain, 'AAAA', print_args), 'ipv6')
-    except:
-        pass
+    html_data['title'] = ''.join(re.findall('<title>(.*?)</title>', text_data, re.IGNORECASE))
+    html_data['status_code'] = int(status_code)
+    html_data['version'] = version
     
+    # parse analytics
+    value = ''.join(re.findall('[\s"\']+(UA-[\d\-]*)["|\'\s]+', text_data, re.IGNORECASE))
+    if value:
+        html_data['analytics']['Google'] = value
+
+    # parse the HTML metadata
+    soup = BeautifulSoup(text_data, "html.parser")
+    soup = soup.findAll('meta')
+    # iterate over the found metadata
+    for meta in soup:
+        # check if the attributes 'name' or 'http-equiv' are in it
+        # if so, set it as the name
+        if any(s.lower() == 'name' for s in meta.attrs.keys()):
+            name = meta['name'].lower()
+        elif any(s.lower() == 'http-equiv' for s in meta.attrs.keys()):
+            name = meta['http-equiv'].lower()
+        else:
+            continue
+        # set the content as the value
+        value = meta['content']
+        # add them to the list
+        html_data['meta'][name] = value
+
     # print the result on STDOUT
-    if results['status_code']:
-        printer('      │      ■ HTTP Status:         ' + Fore.YELLOW + results['status_code'] + Style.RESET_ALL)
-    if results['redirect']:
-        printer('      │      ■ HTTP Redirects:      ' + Fore.YELLOW + results['redirect'] + Style.RESET_ALL)
-    if results['title']:
-        printer('      │      ■ Site Title:          ' + Fore.YELLOW + results['title'] + Style.RESET_ALL)
-    if results['meta']['description']:
-        printer('      │      ■ Site Description:    ' + Fore.YELLOW + results['meta']['description'] + Style.RESET_ALL)
-    if results['meta']['keywords']:
-        printer('      │      ■ Site Keywords:       ' + Fore.YELLOW + results['meta']['keywords'] + Style.RESET_ALL)
-    if results['meta']['twitter_site']:
-        printer('      │      ■ Twitter Account:     ' + Fore.YELLOW + results['meta']['twitter_site'] + Style.RESET_ALL)
-    if results['meta']['twitter_author']:
-        printer('      │      ■ Twitter Author:      ' + Fore.YELLOW + results['meta']['twitter_author'] + Style.RESET_ALL)
-    if results['meta']['facebook_site']:
-        printer('      │      ■ Facebook Account:    ' + Fore.YELLOW + results['meta']['facebook_site'] + Style.RESET_ALL)
-    if results['meta']['facebook_author']:
-        printer('      │      ■ Facebook Author:     ' + Fore.YELLOW + results['meta']['facebook_author'] + Style.RESET_ALL)
-    if results['meta']['canonical']:
-        printer('      │      ■ Canonical Link:      ' + Fore.YELLOW + results['meta']['canonical'] + Style.RESET_ALL)
-    if results['google_ua']:
-        printer('      │      ■ Google Analytics ID: ' + Fore.YELLOW + results['google_ua'] + Style.RESET_ALL)
-    if results['blocked_domain']:
-        printer('      │      ■ Domain Blocked:      ' + Fore.RED + ' / '.join(results['blocked_domain']) + Style.RESET_ALL)
-    if results['blocked_ip']:
-        printer('      │      ■ Site IP Blocked:     ' + Fore.RED + ' / '.join(results['blocked_ip']) + Style.RESET_ALL)
+    if html_data['status_code']:
+        printer(f'      │      ■ HTTP Status:         {Fore.YELLOW} {html_data["status_code"]}{Style.RESET_ALL}')
+    if html_data['redirects']:
+        printer(f'      │      ■ HTTP Redirects:      {Fore.YELLOW} {html_data["redirects"]}{Style.RESET_ALL}')
+    if html_data['title']:
+        printer(f'      │      ■ Site Title:          {Fore.YELLOW} {html_data["title"]}{Style.RESET_ALL}')
+    # print metadata
+    for key, value in html_data['meta'].items():
+        key = key.replace('_', ' ').replace('-', ' ').title()
+        printer(f'      │      ■ {key+":":22}{Fore.YELLOW}{value}{Style.RESET_ALL}')
+    # print analytics
+    for key, value in html_data['analytics'].items():
+        key = key.replace('_', ' ').replace('-', ' ').title()
+        printer(f'      │      ■ {key+":":22}{Fore.YELLOW}{value}{Style.RESET_ALL}')
+    # print HTTP headers
+    if headers:
+        printer(f'      │\n      ├───{Fore.BLACK}{Back.WHITE} HTTP Headers {Style.RESET_ALL}')
 
-    # print HTTP header elements and add HTTP header of the page to the results
-    results['headers'] = headers
-
-    if results['headers']:
-        printer('      │\n      ├───' +  Fore.BLACK + Back.WHITE + ' HTTP Headers ' + Style.RESET_ALL)
-
-        for name, value in results['headers'].items():
-            printer('      │      ■ {0}:  '.format(name) + Fore.YELLOW + value + Style.RESET_ALL)
+        # add the HTTP header to the list and print it
+        for key, value in headers.items():
+            key = key.lower()
+            if key == 'content-security-policy':
+                # print the key name
+                printer(f'      │      ■ {key:22}')
+                html_data['http_headers'][key] = dict()
+                # get directives out of the value
+                directives = value.strip().split(';')
+                # iterate over the CSP directives
+                for directive in directives:
+                    if not directive:
+                        continue
+                    # split a directive
+                    directive = directive.strip().split(' ')
+                    # sanitize the directive
+                    filter(None, directive)
+                    directive = directive.remove(' ') if ' ' in directive else directive
+                    # write the results in the output
+                    html_data['http_headers'][key][directive[0]] = directive[1:]
+                    # print the results
+                    printer(f'      │          ∘ {Fore.BLUE}{directive[0] + ":":15}{Fore.YELLOW}{directive[1:]}{Style.RESET_ALL}')
+            else:
+                # write the results in the output
+                html_data['http_headers'][key] = value
+                # print the results
+                printer(f'      │      ■ {key + ":":22}{Fore.YELLOW}{value}{Style.RESET_ALL}')
 
     # return results
-    return results
+    return html_data

@@ -2,79 +2,57 @@
 
 from colorama import Fore, Style
 from datetime import datetime
-import dns.resolver
 import random
 import re
 import json
-import sys, os
+import sys
+import os
+import traceback
 import requests
+
 from config import config
 
 
-# get the raw date and its format, then covert it to a date object and print it in defined format
-def date_formatter(raw_date, raw_date_format):
-    return datetime.strptime(raw_date, raw_date_format).strftime(config['date_format'])
+# get the raw date and its format, then covert it to a date object and print it 
+# in defined format
+def date_formatter(date, date_format):
+    # if the input 'date' is a string date not a date object
+    if date_format:
+        return datetime.strptime(date, date_format).strftime(config['date_format'])
+    # if the input 'date' is a date object
+    else:
+        return date.strftime(config['date_format'])
+
+
+# a function to return the value of a JSON key if it exists
+def json_value(json, key):
+    value = ''
+    if key in json:
+        if json[key] == 'false':
+            value = False
+        elif json[key] == 'true':
+            value = True
+        elif json[key] in ('null', 'none', None):
+            value = ''
+        else:
+            value = json[key]
+        
+    # return value
+    return value
 
 
 # get the json and check if the key exist
-# it just checks up to 2nd level
-def json_key_checker(json_name, json_key1, json_key2):
-    if json_key1 in json_name:
-        if json_key2 != '' and json_key2 in json_name[json_key1]:
-            return json_name[json_key1][json_key2]
+# it is a recursive function that can check any values given in the list of
+# keys in keys
+def json_key_checker(json, keys):
+    if keys[0] in json:
+        if len(json) > 1 and keys[1] != '' and keys[1] in json[keys[0]]:
+            keys.pop(0)
+            json_key_checker(json[keys[0]], keys)
         else:
-            return json_name[json_key1]
+            return json[keys[0]]
     else:
         return ''
-
-
-# make the json flat
-# i.e. {'a': {'b': 1, 'c': {'d': 2}}, 'e': 3}
-# ===> {'a_b': 1, 'a_c_d': 2, 'e': 3}
-def flat_json(a_key, json, results):
-    joiner = config['output']['csv']['header_joiner']
-    # iterate over keys & values recursively
-    for key, value in json.items():
-        # check if the json contains another jason (is nested)
-        if isinstance(value, dict):
-            a_key += key + joiner
-            # run the function recursively
-            flat_json(a_key, value, results)
-            # sanitize the aggregated key
-            a_key = a_key[:-len(key + joiner)]
-        else:
-            a_key += key
-            results[a_key] = value
-            # sanitize the aggregated key
-            a_key = a_key[:-len(key)]
-    # return results
-    return results
-
-
-# it will get the json, make it flat, and return keys and values in separate lists
-# it also checks if it is asked (in the config file) to be in the CSV file or not
-# if not, it will be ignored from the output lists
-def csv_maker(json, config_json):
-    keys = list()
-    values = list()
-
-    # make the json flat
-    json = flat_json('', json, {})
-    if config_json:
-        config_json = flat_json('', config_json, {})
-
-    # iterate over keys & values
-    for key, value in json.items():
-        # check if it is True in config file to be written in CSV or not
-        if (key in config_json) and config_json[key]:
-            keys.append(key)
-            values.append(value)
-    
-    # return results
-    return [
-        keys,
-        values
-    ]
 
 
 # print on the terminal (STDOUT) and the file
@@ -86,12 +64,15 @@ def printer(term):
     # print the term on the terminal (STDOUT)
     print(term)
     
-    # sanitize the term to be able to save it into a file
-    term = term.replace('[0m', '').replace('[30m', '')
-    term = term.replace('[31m', '').replace('[32m', '').replace('[33m', '').replace('[34m', '').replace('[35m', '')
-    term = term.replace('[36m', '').replace('[37m', '').replace('[38m', '').replace('[39m', '').replace('[40m', '')
-    term = term.replace('[41m', '').replace('[42m', '').replace('[43m', '').replace('[44m', '').replace('[45m', '')
-    term = term.replace('[46m', '').replace('[47m', '').replace('[48m', '').replace('[49m', '').replace('[50m', '')
+    # strip styles from the term to be able to save it into a file
+    term = term.replace('[0m', '').replace('[30m', '').replace('[31m', '')
+    term = term.replace('[32m', '').replace('[33m', '').replace('[34m', '')
+    term = term.replace('[35m', '').replace('[36m', '').replace('[37m', '')
+    term = term.replace('[38m', '').replace('[39m', '').replace('[40m', '')
+    term = term.replace('[41m', '').replace('[42m', '').replace('[43m', '')
+    term = term.replace('[44m', '').replace('[45m', '').replace('[46m', '')
+    term = term.replace('[47m', '').replace('[48m', '').replace('[49m', '')
+    term = term.replace('[50m', '')
     
     # save the term in a global variable to save in a file later
     all_prints += term + '\n'
@@ -111,7 +92,9 @@ def domain_sanitizer(domain):
         
         # convert it to lowercase
         domain = domain.lower()
-    except:
+    except re.error:
+        texts = [f'Error in sanitizing the domain "{domain}".']
+        print_error('exception', texts)
         domain = ''
     
     # return sanitized domain
@@ -120,38 +103,116 @@ def domain_sanitizer(domain):
 
 # get the details of the exception
 def exception_report():
-    exception_type, exception_obj, exception_tb = sys.exc_info()
-    file_name = os.path.split(exception_tb.tb_frame.f_code.co_filename)[1]
+    # get error details
+    exception_type, exception_value, exception_trace = sys.exc_info()
+    # get the file location
+    file_name = os.path.split(exception_trace.tb_frame.f_code.co_filename)[1]
+    # get the line number
+    line_no = exception_trace.tb_lineno
+    # get the trace back to the source
+    exception_trace = ''.join(traceback.format_tb(exception_trace))
+    # return results
     return [
         str(exception_type),
-        str(exception_obj),
-        str(exception_tb),
-        str(exception_tb.tb_lineno),
+        str(exception_value),
+        str(exception_trace),
+        str(line_no),
         str(file_name)
     ]
 
 
-# run functions use "requests" and "json" modules
-def run_requests(url, headers, type, name, print_args):
-    results = list()
-    status_code = 0
-    history = list()
+# print the errors related to the exceptions, based on verbosity
+# flag  = "exception" or True to print based on verbosity, and
+#         False to print nothing as the error
+# texts = ["text for verbosity 1", ..., "text for verbosity 5"]
+def print_error(flag, texts):
+    verbosity_1 = '      │        ├──🛑 '
+    verbosity_2 = '      │        │     '
+    verbosity_3 = '      │        │     '
+    verbosity_4 = '      │        │     '
+    verbosity_5 = '      │        │     '
 
-    # form the header
+    # if flag is True/exception and verbosity is not 0 (or False)
+    if flag and config['verbosity']:
+        # print error messages for verbosity 1 (-v)
+        if config['verbosity'] >= 1 and len(texts) >= 1 and texts[0]:
+            printer(verbosity_1 + Fore.RED + texts[0] + Style.RESET_ALL)
+        # print error messages for verbosity 2 (-vv)
+        if config['verbosity'] >= 2 and len(texts) >= 2 and texts[1]:
+            printer(verbosity_2 + Fore.RED + texts[1] + Style.RESET_ALL)
+        # print error messages for verbosity 3 (-vvv)
+        if config['verbosity'] >= 3 and len(texts) >= 3 and texts[2]:
+            printer(verbosity_3 + Fore.RED + texts[2] + Style.RESET_ALL)
+        # print error messages for verbosity 4 (-vvvv)
+        if config['verbosity'] >= 4 and len(texts) >= 4 and texts[3]:
+            printer(verbosity_4 + Fore.RED + texts[3] + Style.RESET_ALL)
+        # print error messages for verbosity 5 (-vvvvv)
+        if config['verbosity'] >= 5:
+            if len(texts) >= 5 and texts[4]:
+                printer(verbosity_5 + Fore.RED + texts[4] + Style.RESET_ALL)
+            # in case, it is an exception error message
+            if flag == 'exception':
+                ex = exception_report()
+                printer(
+                    verbosity_5 + 'Exception Message: ' + Fore.MAGENTA + 
+                    ex[0] + ' ➜ ' + ex[4] + ':' + ex[3] + Fore.RED + ' == ' + 
+                    ex[2] + ' ⚊ ' + ex[1] + Style.RESET_ALL
+                )
+
+
+# send the HTTP request based on the method and get the results
+# in text or JSON format
+def run_requests(method, url, cookies, data, headers, type, name):
+    # some variables to store results
+    results = list()
+    history = list()
+    http_headers = list()
+    version = ''
+    status_code = 0
+
+    # print the subtitle based on the the variable "name"
+    if config['verbosity'] >= 2 and name:
+        printer(
+            '      │        ├□ ' + Fore.GREEN + 
+            f'{name} is calling' + Style.RESET_ALL
+        )
+
+    # form the header and add a random User-Agent
     if not headers:
         headers = {'User-Agent': random.choice(config['user_agents'])}
+    else:
+        headers['User-Agent'] = random.choice(config['user_agents'])
+    
+    # send the HTTP request based on the given method
     try:
-        # run the request
-        request = requests.get(url, headers=headers)
+        # run the GET request
+        if method == 'GET':
+            request = requests.get(
+                url,
+                headers=headers,
+                timeout=config['delay']['requests_timeout']
+            )
+        # run the POST request
+        elif method == 'POST':
+            request = requests.post(
+                url,
+                cookies=cookies,
+                data=json.dumps(data),
+                headers=headers,
+                timeout=config['delay']['requests_timeout']
+            )
 
         # get the status code
-        status_code = request.status_code
+        status_code = int(request.status_code)
 
         # get the history
         history = request.history
 
         # get the headers
-        headers = request.headers
+        http_headers = request.headers
+
+        # get the HTTP version
+        version = request.raw.version
 
         # get the results if there is the type is either 'text' or 'json'
         if type == 'json':
@@ -162,100 +223,76 @@ def run_requests(url, headers, type, name, print_args):
             results = request
 
     # exceptions
-    except requests.exceptions.HTTPError:
-        if print_args[0]:
-            ex = exception_report()
-            printer(print_args[1] + Fore.RED + 'Error in loading the {0} URL page.'.format(name) + Style.RESET_ALL)
-            if config['verbosity'] >= 4:
-                printer(print_args[2] + 'ERROR: ' + Fore.MAGENTA + ex[0] + ' → ' + ex[4] + ':' + ex[3] + Fore.RED + '  ' + ex[1] + Style.RESET_ALL)
-    except requests.exceptions.ConnectionError:
-        if print_args[0]:
-            ex = exception_report()
-            printer(print_args[1] + Fore.RED + 'Error in establishing the connection to the {0} URL.'.format(name) + Style.RESET_ALL)
-            if config['verbosity'] >= 4:
-                printer(print_args[2] + 'ERROR: ' + Fore.MAGENTA + ex[0] + ' → ' + ex[4] + ':' + ex[3] + Fore.RED + '  ' + ex[1] + Style.RESET_ALL)
-    except requests.exceptions.Timeout:
-        if print_args[0]:
-            ex = exception_report()
-            printer(print_args[1] + Fore.RED + 'Timeout error while opening {0} URL.'.format(name) + Style.RESET_ALL)
-            if config['verbosity'] >= 4:
-                printer(print_args[2] + 'ERROR: ' + Fore.MAGENTA + ex[0] + ' → ' + ex[4] + ':' + ex[3] + Fore.RED + '  ' + ex[1] + Style.RESET_ALL)
-    except requests.exceptions.RequestException:
-        if print_args[0]:
-            ex = exception_report()
-            printer(print_args[1] + Fore.RED + 'Error in reading the data from the {0} URL.'.format(name) + Style.RESET_ALL)
-            if config['verbosity'] >= 4:
-                printer(print_args[2] + 'ERROR: ' + Fore.MAGENTA + ex[0] + ' → ' + ex[4] + ':' + ex[3] + Fore.RED + '  ' + ex[1] + Style.RESET_ALL)
+    except requests.exceptions.SSLError:
+        texts = [
+            f'The URL {url} cannot be opened due to an SSL error.',
+            '',
+            f'Status Code: {status_code}  -  API call URL: {url}'
+        ]
+        print_error('exception', texts)
     except requests.exceptions.TooManyRedirects:
-        if print_args[0]:
-            ex = exception_report()
-            printer(print_args[1] + Fore.RED + 'The provided {0} URL does not seem correct.'.format(name) + Style.RESET_ALL)
-            if config['verbosity'] >= 4:
-                printer(print_args[2] + 'ERROR: ' + Fore.MAGENTA + ex[0] + ' → ' + ex[4] + ':' + ex[3] + Fore.RED + '  ' + ex[1] + Style.RESET_ALL)
+        texts = [
+            f'The provided {name} URL does not seem correct.',
+            '',
+            f'Status Code: {status_code}  -  API call URL: {url}'
+        ]
+        print_error('exception', texts)
+    except requests.exceptions.HTTPError:
+        texts = [
+            f'Error in loading the {name} URL page.',
+            '',
+            f'Status Code: {status_code}  -  API call URL: {url}'
+        ]
+        print_error('exception', texts)
+    except requests.exceptions.ConnectionError:
+        texts = [
+            f'Error in establishing the connection to the {name} URL.',
+            '',
+            f'Status Code: {status_code}  -  API call URL: {url}'
+        ]
+        print_error('exception', texts)
+    except requests.exceptions.Timeout:
+        texts = [
+            f'Timeout error while opening {name} URL.',
+            '',
+            f'Status Code: {status_code}  -  API call URL: {url}'
+        ]
+        print_error('exception', texts)
+    except requests.exceptions.RequestException:
+        texts = [
+            f'Error in reading the data from the {name} URL.',
+            '',
+            f'Status Code: {status_code}  -  API call URL: {url}'
+        ]
+        print_error('exception', texts)
     except json.decoder.JSONDecodeError:
-        if print_args[0]:
-            ex = exception_report()
-            printer(print_args[1] + Fore.RED + 'Error in reading the JSON data retrieved from the {0} call.'.format(name) + Style.RESET_ALL)
-            if config['verbosity'] >= 4:
-                printer(print_args[2] + 'ERROR: ' + Fore.MAGENTA + ex[0] + ' → ' + ex[4] + ':' + ex[3] + Fore.RED + '  ' + ex[1] + Style.RESET_ALL)
+        texts = [
+            f'Error in reading the JSON data retrieved from the {name} call.',
+            '',
+            f'Status Code: {status_code}  -  API call URL: {url}'
+        ]
+        print_error('exception', texts)
     except ValueError:
-        if print_args[0]:
-            ex = exception_report()
-            printer(print_args[1] + Fore.RED + 'No Result is found or there was an error for {0}.'.format(name) + Style.RESET_ALL)
-            if config['verbosity'] >= 4:
-                printer(print_args[2] + 'ERROR: ' + Fore.MAGENTA + ex[0] + ' → ' + ex[4] + ':' + ex[3] + Fore.RED + '  ' + ex[1] + Style.RESET_ALL)
+        texts = [
+            f'No Result is found or there was an error for {name}.',
+            '',
+            f'Status Code: {status_code}  -  API call URL: {url}'
+        ]
+        print_error('exception', texts)
     except Exception:
-        if print_args[0]:
-            ex = exception_report()
-            printer(print_args[1] + Fore.RED + 'An unknown error is ocurred while running {0}.'.format(name) + Style.RESET_ALL)
-            if config['verbosity'] >= 4:
-                printer(print_args[2] + 'ERROR: ' + Fore.MAGENTA + ex[0] + ' → ' + ex[4] + ':' + ex[3] + Fore.RED + '  ' + ex[1] + Style.RESET_ALL)
+        texts = [
+            f'An unknown error is ocurred while running {name}.',
+            '',
+            f'Status Code: {status_code}  -  API call URL: {url}'
+        ]
+        print_error('exception', texts)
 
     # return results
-    return [
-        results,
-        status_code,
-        history,
-        headers
-    ]
-
-
-# resolve the DNS
-def dns_resolver(domain, record, print_args):
-    results = list()
-        
-    # set the DNS server
-    dns.resolver.Resolver().nameservers = config['dns']['dns_servers']
-
-    try:
-        answers = dns.resolver.resolve(domain, record)
-        for answer in answers: 
-            results.append(str(answer))
-
-    except dns.resolver.NoAnswer:
-        if print_args[0]:
-            ex = exception_report()
-            printer(print_args[1] + Fore.RED + 'The DNS query "{0}" for "{1}" returned no answer.'.format(record, domain) + Style.RESET_ALL)
-            if config['verbosity'] >= 4:
-                printer(print_args[2] + 'ERROR: ' + Fore.MAGENTA + ex[0] + ' → ' + ex[4] + ':' + ex[3] + Fore.RED + '  ' + ex[1] + Style.RESET_ALL)
-    except dns.resolver.NXDOMAIN:
-        if print_args[0]:
-            ex = exception_report()
-            printer(print_args[1] + Fore.RED + 'QUERY "{0}": The domain "{1}" does not exist.'.format(record, domain) + Style.RESET_ALL)
-            if config['verbosity'] >= 4:
-                printer(print_args[2] + 'ERROR: ' + Fore.MAGENTA + ex[0] + ' → ' + ex[4] + ':' + ex[3] + Fore.RED + '  ' + ex[1] + Style.RESET_ALL)
-    except dns.resolver.NoNameservers:
-        if print_args[0]:
-            ex = exception_report()
-            printer(print_args[1] + Fore.RED + 'All nameservers failed to answer the DNS query "{0}" for "{1}".'.format(record, domain) + Style.RESET_ALL)
-            if config['verbosity'] >= 4:
-                printer(print_args[2] + 'ERROR: ' + Fore.MAGENTA + ex[0] + ' → ' + ex[4] + ':' + ex[3] + Fore.RED + '  ' + ex[1] + Style.RESET_ALL)
-    except Exception:
-        if print_args[0]:
-            ex = exception_report()
-            printer(print_args[1] + Fore.RED + 'QUERY "{0}": No result is found for "{1}" or there was an error.'.format(record, domain) + Style.RESET_ALL)
-            if config['verbosity'] >= 4:
-                printer(print_args[2] + 'ERROR: ' + Fore.MAGENTA + ex[0] + ' → ' + ex[4] + ':' + ex[3] + Fore.RED + '  ' + ex[1] + Style.RESET_ALL)
-
-    # return the list of the DNS results
-    return list(set(results))
+    finally:
+        return [
+            results,
+            status_code,
+            history,
+            http_headers,
+            version
+        ]

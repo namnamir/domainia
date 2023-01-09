@@ -5,6 +5,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 
+## [2.2.0] - 
+### Fixed
+- Fix the issue of not loading certificates.
+- Fix the issue with CSV as it was not written properly.
+- Fix the argument parse.
+- 
+
+### Added
+- Add the total time to the scan to get the total time from the beginning.
+- Add the timeout to requests to prevent dead-ends while opening URLs.
+- Add more details to the certificate ([#45](https://github.com/namnamir/domainia/issues/45)).
+- Add OpenSSL certificate parser ([#20](https://github.com/namnamir/domainia/issues/20)).
+
 ## [2.0.1] - 2022-10-30
 ### Fixed
 - The version number was fixed.

@@ -75,6 +75,72 @@ Result of the scan would be saved in a CSV file. You can manage the path of the 
 ![Results in CSV](https://raw.githubusercontent.com/namnamir/domainia/main/img/result.png)
 ![Results in CSV](https://raw.githubusercontent.com/namnamir/domainia/main/img/result2.png)
 
+## 6. JSON Format
+
+```json
+[
+  "example.com": {
+    "DNS": [
+      {
+        "record": "A",
+        "value": "1.2.3.4",
+      },
+    ],
+    "related_ip" : [
+      {
+        "name": "1.2.3.4",
+        "version": "IPv4",
+        "whois": {},
+        "listed": [],
+        "technologies" : [],
+        "ports": [],
+        "reverse_dns": [],
+        "vulnerabilities": [],
+      },
+    ],
+    "related_domains" : [
+      {
+        "name": "site.tld",
+        "whois": {},
+        "listed": [],
+        "technologies" : [],
+        "ports": [],
+        "vulnerabilities": [],
+        "http_headers": [],
+        "html_meta": [],
+        "subdomains": [],
+        "related_domains": []
+      },
+    ],
+    "html": {
+      "meta": [
+        {
+          "name": "",
+          "value": "",
+        }
+      ],
+      "redirects": [],
+      "status_code": 200,
+      "title": "",
+      "analytics": [
+        {
+          "name": "Google",
+          "value": "UA-123"
+        }
+      ]
+    },
+    "http_headers": [
+      {
+        "name": "",
+        "value": "",
+      }
+    ],
+    "whois": {},
+    "listed": [],
+  }
+]
+```
+
 ---
 ⚖️ **Copyright**
 Domainia tool is released under copy left; there is no right. Just kidding, it is under MIT license; read more about it on the [LICENSE page](https://github.com/namnamir/domainia/blob/main/LICENSE).

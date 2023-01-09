@@ -32,14 +32,28 @@ config = {
         'dns': random.randint(0, 1),
         # delay between loading SSL certificates
         'ssl': random.randint(3, 10),
+        # the requests' timeout
+        'requests_timeout': random.randint(10, 15),
     },
+    # define type of the scan that has effect on the scan speed
+    # if it is defined by STDIN (argument -t), the setting from the config 
+    # file will be ignored
+    # possible options: "quick" and "deep"
     'scan_type': {
         # find alternative domains and subdomains by going into each single
         # certificate or just by skimming the ssl overview
-        # possible options: "quick" and "deep"
-        # if it is defined by stdin (argument -t),
-        # the setting from the config file will be ignored
-        'alt_domain_finder': 'quick',
+        ## list of APIs:
+        ##   - crt_sh
+        'ssl': 'quick',
+        # when calling the APIs looking for technologies
+        ## list of APIs:
+        ##   - large_io
+        'technology': 'deep',
+        # define the ports to be check if they are open or not
+        # port numbers range: 0 - 65535
+        # define them in single or range like 1-5
+        'tcp_ports': [21-23, 25, 53, 80, 110-111, 135, 139, 143, 443, 445, 993, 995, 1723, 3306, 3389, 5900, 8080],
+        'udp_ports': [22-23, 53, 67, 68, 111, 137, 143, 161, 162],
     },
     'output': {
         # the default name of the output file
@@ -48,6 +62,7 @@ config = {
         # possible options are as follows
         # 'csv' for a CSV file
         # 'json' for a JSON file
+        # 'yaml' for a YAML file
         # 'txt' for a text file of the STDOUT
         # 'all' for all aforementioned formats
         'format': 'all',
@@ -91,22 +106,82 @@ config = {
             },
             # define which SSL data should be parsed and be written in the CSV output file
             'ssl': {
-                'issue_date': True,
-                'expiration_date': True,
+                'expired': True,
+                'version': True,
                 'signature': True,
+                'server_signature': True,
                 'serial_number': True,
+                'validity': {
+                    'issue_date': True,
+                    'expiration_date': True,
+                    # validity of the certificate in days
+                    'days': True,
+                    # days past from the issue date
+                    'past_days': True,
+                    # days left to the expiration date
+                    'left_days': True,
+                },
+                'fingerprint': {
+                    'md5': False,
+                    'sha1': False,
+                    'sha256': True,
+                    'sha512': False,
+                },
                 'issuer': {
                     'common_name': True,
                     'organization_name': True,
-                    'country': True,
                     'organization_unit_name': True,
+                    'country': True,
+                    'state': True,
+                    'city': True,
+                    'email_address': True,
                 },
                 'subject': {
                     'common_name': True,
                     'organization_name': True,
+                    'organization_unit_name': True,
                     'country': True,
-                    'locality_name': True,
-                }
+                    'state': True,
+                    'city': True,
+                    'email_address': True,
+                },
+                'control': {
+                    'grade': True,
+                    'protocol': True,
+                    'suite': True,
+                    'www_reachable': True,
+                    'non_www_reachable': True,
+                    'compression': True,
+                    'npn': True,
+                    'alpn': True,
+                    'session_ticket': True,
+                    'ocsp_stapling': True,
+                    'sni_required': True,
+                    'rc4': True,
+                    'logjam': True,
+                    'dhYsReuse': True,
+                },
+                'vulnerability': {
+                    'beast': True,
+                    'heart_bleed': True,
+                    'heartbeat': True,
+                    'poodle': True,
+                    'freak': True,
+                    'drown': True,
+                    'drown_host': True,
+                    'ecdh_parameter_reuse': True,
+                    'renegotiation': True,
+                    'session_resumption': True,
+                    'openssl_ccs': True,
+                    'openssl_lucky_m20': True,
+                    'ticket_bleed': True,
+                    'bleichenbacher': True,
+                    'zombie_poodle': True,
+                    'golden_doodle': True,
+                    'zero_length_padding_oracle': True,
+                    'sleeping_poodle': True,
+                    'poodle_tls': True,
+                },
             },
             # define which HTTP data should be parsed an written in the CSV output file
             'http': {
@@ -220,6 +295,11 @@ config = {
             # define the indent size for the JSON file
             'indent': 4,
         },
+        # settings of the YAML output file
+        'yaml': {
+            # define the indent size for the YAML file
+            'indent': 4,
+        },
         # settings of the CSV output file
         'csv': {
             # define the header joiner
@@ -240,6 +320,8 @@ config = {
                 'keyword': ' ',
                 # delimiter for the blocklist column in the CSV file
                 'blocklist': ' ',
+                # delimiter for the blocklist column in the CSV file
+                'other': ' ',
                 # delimiter for the CSV columns
                 'column': ',',
             },
@@ -283,39 +365,41 @@ config = {
         'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.114 YaBrowser/22.9.1.1110 (beta) Yowser/2.5 Safari/537.36',
         'Mozilla/5.0 (X11; Linux x86_64; rv:106.0) Gecko/20100101 Firefox/106.0',
         'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/534.34 (KHTML, like Gecko) kioclient/5.20.5 Safari/534.34',
-        # Mobile phones
-        'Mozilla/5.0 (Linux; arm_64; Android 11; SM-A225F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.166 YaBrowser/21.8.5.54.00 SA/3 Mobile Safari/537.36',
-        'Mozilla/5.0 (Linux; Android 10; FRL-L22; HMSCore 6.7.0.321) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.105 HuaweiBrowser/12.1.2.312 Mobile Safari/537.36',
-        'Mozilla/5.0 (Linux; Android 12; SAMSUNG SM-F721N/KSU1AVJ5) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/18.0 Chrome/99.0.4844.88 Mobile Safari/537.36',
-        'Mozilla/5.0 (Linux; Android 4.1.2; Nokia_XL Build/JZO54K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/30.0.1599.82 Mobile Safari/537.36 NokiaBrowser/1.2.0.12',
-        'Mozilla/5.0 (iPhone; CPU iPhone OS 8_2_1 like Mac OS X; sl-SI) AppleWebKit/533.9.5 (KHTML, like Gecko) Version/4.0.5 Mobile/8B111 Safari/6533.9.5',
-        'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
-        'Mozilla/5.0 (iPhone; CPU iPhone OS 16_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/106.0 Mobile/15E148 Safari/605.1.15',
-        'Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1 (compatible; Baiduspider-render/2.0; +http://www.baidu.com/search/spider.html)',
-        'Mozilla/5.0 (iPhone; CPU iPhone OS 11_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15G77 Twitter for iPhone/7.28',
-        'Mozilla/5.0 (Windows Phone 10.0; Android 6.0.1; Xbox; Xbox One) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Mobile Safari/537.36 Edge/16.16299',
-        # Tablets
-        'Mozilla/5.0 (iPad; CPU OS 15_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6,2 Mobile/15E148 Safari/604.1',
-        'Mozilla/5.0 (iPad; CPU OS 15_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/107.0.5304.66 Mobile/15E148 Safari/604.1',
-        'Mozilla/5.0 (iPad; CPU OS 13_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 [FBAN/FBIOS;FBDV/iPad5,1;FBMD/iPad;FBSN/iOS;FBSV/13.1;FBSS/2;FBID/tablet;FBLC/en_US;FBOP/5]',
-        'Mozilla/5.0 (iPad; CPU OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Version/13.2.3 Safari/604.1 AlohaBrowser/2.15.2b3',
-        'Mozilla/5.0 (iPad; CPU OS 16_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Mobile/15E148 Safari/604.1',
+        # # Mobile phones
+        # 'Mozilla/5.0 (Linux; arm_64; Android 11; SM-A225F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.166 YaBrowser/21.8.5.54.00 SA/3 Mobile Safari/537.36',
+        # 'Mozilla/5.0 (Linux; Android 10; FRL-L22; HMSCore 6.7.0.321) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.105 HuaweiBrowser/12.1.2.312 Mobile Safari/537.36',
+        # 'Mozilla/5.0 (Linux; Android 12; SAMSUNG SM-F721N/KSU1AVJ5) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/18.0 Chrome/99.0.4844.88 Mobile Safari/537.36',
+        # 'Mozilla/5.0 (Linux; Android 4.1.2; Nokia_XL Build/JZO54K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/30.0.1599.82 Mobile Safari/537.36 NokiaBrowser/1.2.0.12',
+        # 'Mozilla/5.0 (iPhone; CPU iPhone OS 8_2_1 like Mac OS X; sl-SI) AppleWebKit/533.9.5 (KHTML, like Gecko) Version/4.0.5 Mobile/8B111 Safari/6533.9.5',
+        # 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
+        # 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/106.0 Mobile/15E148 Safari/605.1.15',
+        # 'Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1 (compatible; Baiduspider-render/2.0; +http://www.baidu.com/search/spider.html)',
+        # 'Mozilla/5.0 (iPhone; CPU iPhone OS 11_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15G77 Twitter for iPhone/7.28',
+        # 'Mozilla/5.0 (Windows Phone 10.0; Android 6.0.1; Xbox; Xbox One) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Mobile Safari/537.36 Edge/16.16299',
+        # # Tablets
+        # 'Mozilla/5.0 (iPad; CPU OS 15_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6,2 Mobile/15E148 Safari/604.1',
+        # 'Mozilla/5.0 (iPad; CPU OS 15_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/107.0.5304.66 Mobile/15E148 Safari/604.1',
+        # 'Mozilla/5.0 (iPad; CPU OS 13_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 [FBAN/FBIOS;FBDV/iPad5,1;FBMD/iPad;FBSN/iOS;FBSV/13.1;FBSS/2;FBID/tablet;FBLC/en_US;FBOP/5]',
+        # 'Mozilla/5.0 (iPad; CPU OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Version/13.2.3 Safari/604.1 AlohaBrowser/2.15.2b3',
+        # 'Mozilla/5.0 (iPad; CPU OS 16_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Mobile/15E148 Safari/604.1',
     ],
     # dns related settings
     'dns': {
         # list of the records
-        # divide name by '/', e.g. TXT/_dmarc means _dmarc in TXT records
-        # some famous DKIM selectors are listed below. Use them if you would like to brute-force selectors
+        # read more: https://en.wikipedia.org/wiki/List_of_DNS_record_types
+        # read more: https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml
         # possible records:
+        # also look at the item in 'rr_dns_records' below.
         ### NONE, A, NS, MD, MF, CNAME, SOA, MB, MG, MR, NULL, WKS, PTR, HINFO, MINFO, MX, TXT, RP,
         ### AFSDB, X25, ISDN, RT, NSAP, NSAP-PTR, SIG, KEY, PX, GPOS, AAAA, LOC, NXT, SRV, NAPTR, KX,
         ### CERT, A6, DNAME, OPT, APL, DS, SSHFP, IPSECKEY, RRSIG, NSEC, DNSKEY, DHCID, NSEC3,
         ### NSEC3PARAM, TLSA, HIP, CDS, CDNSKEY, CSYNC, SPF, UNSPEC, EUI48, EUI64, TKEY, TSIG,
-        ### IXFR, AXFR, MAILB, MAILA, ANY, URI, CAA, TA, DLV,
+        ### IXFR, AXFR, MAILB, MAILA, ANY, URI, CAA, TA, DLV
         'dns_records': [
             'A',
             'AAAA',
             'NS',
+            'DS',
             'CNAME',
             'MX',
             'DNSKEY',
@@ -323,91 +407,100 @@ config = {
             'TXT',
             'SRV',
             'PTR',
-            ## default DMARC subdomain
-            'TXT/_dmarc',
-            ## default DKIM
-            ## Maropost default DKIM
-            'TXT/default._domainkey',
-            ## Google default DKIM
-            #'TXT/google._domainkey',
-            ## Microsoft default DKIM
-            #'TXT/selector1._domainkey',
-            ## Microsoft default DKIM
-            #'TXT/selector2._domainkey',
-            ## Sendgrid / SharpSpring default DKIM
-            #'TXT/s1._domainkey',
-            ## Sendgrid / SharpSpring default DKIM
-            #'TXT/s2._domainkey',
-            ## Hetzner default DKIM
-            #'TXT/dkim._domainkey',
-            ## MailChimp default DKIM
-            #'TXT/mandrill._domainkey',
-            ## MailChimp / Mandrill / MailGun default DKIM
-            #'TXT/k1._domainkey',
-            ## MailChimp / Mandrill default DKIM
-            #'TXT/k2._domainkey',
-            ## Everlytic default DKIM
-            #'TXT/everlytickey1._domainkey',
-            ## Everlytic default DKIM
-            #'TXT/everlytickey2._domainkey',
-            ## Everlytic default DKIM
-            #'TXT/eversrv._domainkey',
-            ## Acoustic / SilverPop / IBM Watson default DKIM
-            #'TXT/spop1024._domainkey',
-            ## ActiveCampaign default DKIM
-            #'TXT/dk._domainkey',
-            ## Aruba.it default DKIM
-            #'TXT/a1._domainkey',
-            ## AWeber default DKIM
-            #'TXT/aweber_key_a._domainkey',
-            ## AWeber default DKIM
-            #'TXT/aweber_key_b._domainkey',
-            ## AWeber default DKIM
-            #'TXT/aweber_key_c._domainkey',
-            ## Campaign Monitor default DKIM
-            #'TXT/cm._domainkey',
-            ## ContactLab default DKIM
-            #'TXT/clab1._domainkey',
-            ## DotDigital default DKIM
-            #'TXT/dkim1024._domainkey',
-            ## Emarsys / Listrak default DKIM
-            #'TXT/key1._domainkey',
-            ## Emarsys default DKIM
-            #'TXT/key2._domainkey',
-            ## Emma default DKIM
-            #'TXT/e2ma-k1._domainkey',
-            ## Emma default DKIM
-            #'TXT/e2ma-k2._domainkey',
-            ## Emma default DKIM
-            #'TXT/e2ma-k3._domainkey',
-            ## GoDaddy / Mad Mimi default DKIM
-            #'TXT/sable._domainkey',
-            ## HubSpot default DKIM
-            #'TXT/hs1._domainkey',
-            ## HubSpot default DKIM
-            #'TXT/hs2._domainkey',
-            ## Klaviyo default DKIM
-            #'TXT/kl._domainkey',
-            ## Klaviyo default DKIM
-            #'TXT/kl1._domainkey',
-            ## MailJet default DKIM
-            #'TXT/mailjet._domainkey',
-            ## MailPoet default DKIM
-            #'TXT/mailpoet1._domainkey',
-            ## MailPoet default DKIM
-            #'TXT/mailpoet2._domainkey',
-            ## Mapp Digital default DKIM
-            #'TXT/ecm1._domainkey',
-            ## Omnisend default DKIM
-            #'TXT/smtp._domainkey',
-            ## Sendinblue default DKIM
-            #'TXT/mail._domainkey',
         ],
         # ignore any TXT records does not contain following terms
+        # ':' (colon) is used to define similar terms
+        # i.e. 'DKIM:domainkey' means either 'DKIM' or 'domainkey'
+        # means 'DKIM' (the term before :)
         'include_txt_records': [
             'SPF',
             'DMARC',
-            'DKIM'
+            'DKIM:domainkey',
+        ],
+        # some famous DMARC subdomains and DKIM selectors are listed below
+        # Use them if you would like to brute-force selectors
+        'txt_records_helper': [
+            ## default DMARC subdomain
+            '_dmarc',
+            ## default BIMI
+            'default._bimi',
+            ## default DKIM
+            'default._domainkey',
+
+            ## Google default DKIM
+            #'google._domainkey',
+            ## Microsoft default DKIM
+            #'selector1._domainkey',
+            ## Microsoft default DKIM
+            #'selector2._domainkey',
+            ## Sendgrid / SharpSpring default DKIM
+            #'s1._domainkey',
+            ## Sendgrid / SharpSpring default DKIM
+            #'s2._domainkey',
+            ## Hetzner default DKIM
+            #'dkim._domainkey',
+            ## MailChimp default DKIM
+            #'mandrill._domainkey',
+            ## MailChimp / Mandrill / MailGun default DKIM
+            #'k1._domainkey',
+            ## MailChimp / Mandrill default DKIM
+            #'k2._domainkey',
+            ## Everlytic default DKIM
+            #'everlytickey1._domainkey',
+            ## Everlytic default DKIM
+            #'everlytickey2._domainkey',
+            ## Everlytic default DKIM
+            #'eversrv._domainkey',
+            ## Acoustic / SilverPop / IBM Watson default DKIM
+            #'spop1024._domainkey',
+            ## ActiveCampaign default DKIM
+            #'dk._domainkey',
+            ## Aruba.it default DKIM
+            #'a1._domainkey',
+            ## AWeber default DKIM
+            #'aweber_key_a._domainkey',
+            ## AWeber default DKIM
+            #'aweber_key_b._domainkey',
+            ## AWeber default DKIM
+            #'aweber_key_c._domainkey',
+            ## Campaign Monitor default DKIM
+            #'cm._domainkey',
+            ## ContactLab default DKIM
+            #'clab1._domainkey',
+            ## DotDigital default DKIM
+            #'dkim1024._domainkey',
+            ## Emarsys / Listrak default DKIM
+            #'key1._domainkey',
+            ## Emarsys default DKIM
+            #'key2._domainkey',
+            ## Emma default DKIM
+            #'e2ma-k1._domainkey',
+            ## Emma default DKIM
+            #'e2ma-k2._domainkey',
+            ## Emma default DKIM
+            #'e2ma-k3._domainkey',
+            ## GoDaddy / Mad Mimi default DKIM
+            #'sable._domainkey',
+            ## HubSpot default DKIM
+            #'hs1._domainkey',
+            ## HubSpot default DKIM
+            #'hs2._domainkey',
+            ## Klaviyo default DKIM
+            #'kl._domainkey',
+            ## Klaviyo default DKIM
+            #'kl1._domainkey',
+            ## MailJet default DKIM
+            #'mailjet._domainkey',
+            ## MailPoet default DKIM
+            #'mailpoet1._domainkey',
+            ## MailPoet default DKIM
+            #'mailpoet2._domainkey',
+            ## Mapp Digital default DKIM
+            #'ecm1._domainkey',
+            ## Omnisend default DKIM
+            #'smtp._domainkey',
+            ## Sendinblue default DKIM
+            #'mail._domainkey',
         ],
         # to perform the DNS recon, it uses the random list of DNS server,
         # if you prefer just one specific DNS server, remove the list and
@@ -445,7 +538,100 @@ config = {
             21: 'BADALG: Algorithm not supported',
             22: 'BADTRUNC: Bad truncation',
             23: 'BADCOOKIE: Bad or missing server cookie',
-        }
+        },
+        # RR DNS records translation
+        # read more: https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml
+        'rr_dns_records': {
+            'A': 1,
+            'NS': 2,
+            'MD': 3,
+            'MF': 4,
+            'CNAME': 5,
+            'SOA': 6,
+            'MB': 7,
+            'MG': 8,
+            'MR': 9,
+            'NULL': 10,
+            'WKS': 11,
+            'PTR': 12,
+            'HINFO': 13,
+            'MINFO': 14,
+            'MX': 15,
+            'TXT': 16,
+            'RP': 17,
+            'AFSDB': 18,
+            'X25': 19,
+            'ISDN': 20,
+            'RT': 21,
+            'NSAP': 22,
+            'NSAP-PTR': 23,
+            'SIG': 24,
+            'KEY': 25,
+            'PX': 26,
+            'GPOS': 27,
+            'AAAA': 28,
+            'LOC': 29,
+            'NXT': 30,
+            'EID': 31,
+            'NIMLOC': 32,
+            'SRV': 33,
+            'ATMA': 34,
+            'NAPTR': 35,
+            'KX': 36,
+            'CERT': 37,
+            'A6': 38,
+            'DNAME': 39,
+            'SINK': 40,
+            'OPT': 41,
+            'APL': 42,
+            'DS': 43,
+            'SSHFP': 44,
+            'IPSECKEY': 45,
+            'RRSIG': 46,
+            'NSEC': 47,
+            'DNSKEY': 48,
+            'DHCID': 49,
+            'NSEC3': 50,
+            'NSEC3PARAM': 51,
+            'TLSA': 52,
+            'SMIMEA': 53,
+            'Unassigned': 54,
+            'HIP': 55,
+            'NINFO': 56,
+            'RKEY': 57,
+            'TALINK': 58,
+            'CDS': 59,
+            'CDNSKEY': 60,
+            'OPENPGPKEY': 61,
+            'CSYNC': 62,
+            'ZONEMD': 63,
+            'SVCB': 64,
+            'HTTPS': 65,
+            'SPF': 99,
+            'UINFO': 100,
+            'UID': 101,
+            'GID': 102,
+            'UNSPEC': 103,
+            'NID': 104,
+            'L32': 105,
+            'L64': 106,
+            'LP': 107,
+            'EUI48': 108,
+            'EUI64': 109,
+            'TKEY': 249,
+            'TSIG': 250,
+            'IXFR': 251,
+            'AXFR': 252,
+            'MAILB': 253,
+            'MAILA': 254,
+            'URI': 256,
+            'CAA': 257,
+            'AVC': 258,
+            'DOA': 259,
+            'AMTRELAY': 260,
+            'TA': 32768,
+            'DLV': 32769,
+        },
     },
     'cnames': {
         # Githb
@@ -718,10 +904,11 @@ config = {
             'fingerprint': '',
             'f_type': 'NXDOMAIN',
         },
-        '': {
-            'service': '',
-            'fingerprint': '',
-            'f_type': 'content',
+        # Yandex
+        'yandex.ru': {
+            'service': 'Yandex',
+            'fingerprint': '404',
+            'f_type': 'http_status',
         },
         '': {
             'service': '',
@@ -879,12 +1066,20 @@ config = {
             '127.0.0.8': [3, 'Spam: domains that actively show up in mail flow, are not listed on URIBL black, and are either: being monitored, very young (domain age via whois), or use whois privacy features to protect their identity'],
         },
     },
+    # List of HTML parameters with the following format
+    # <meta name='KEY' conetet='VALUE'>
+    'html': {
+        'meta': [
+            'name',
+            'http-equiv'
+        ]
+    },
     # details of APIs
     # for date/time formats, check out 
     # https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
     'api': {
         # whois lookup APIs
-        'whoisxml': {
+        'whois_xml': {
             'url_whois': 'https://www.whoisxmlapi.com/whoisserver/WhoisService?apiKey={0}&outputFormat=JSON&domainName={1}',
             'url_dns': 'https://www.whoisxmlapi.com/whoisserver/DNSService?apiKey={0}&outputFormat=JSON&domainName={1}&type=_all',
             'url_ip_geo': 'https://ip-geolocation.whoisxmlapi.com/api/v1?apiKey={0}&outputFormat=JSON&ipAddress={1}',
@@ -893,38 +1088,176 @@ config = {
             'date_format': '%Y-%m-%dT%H:%M:%SZ',
             'api_key': random.choice(api_key_whoisxml),
         },
+        # Whoxy
         'whoxy': {
             'url_whois': 'https://api.whoxy.com/?key={0}&whois={1}&format=json',
             'url_balance': 'https://api.whoxy.com/?key={0}&account=balance',
             'date_format': '%Y-%m-%d',
             'api_key': random.choice(api_key_whoxy),
         },
-        # SSL certificate API
+        # Censys
+        # read more: https://search.censys.io/account/api
+        'censys': {
+            'url_ip': 'https://search.censys.io/api/v2/hosts/{0}',
+            'url_domain': 'https://search.censys.io/api/v2/hosts/search?q={0}&virtual_hosts=INCLUDE',
+            'url_cert': 'https://search.censys.io/api/v1/view/certificates/{0}',
+            'api_key': random.choice(api_key_censys),
+            # sleep between queries
+            # based on the query rate limits
+            'delay': 5,
+        },
+        # CRT SH API
         'crt_sh': {
             'url_all': 'https://crt.sh/?q={0}&output=json',
-            'url_single': 'https://crt.sh/?id={0}',
+            'url_single': 'https://crt.sh/?id={0}&opt=nometadata,cablint,x509lint,zlint',
             'date_format': '%b %d %H:%M:%S %Y GMT',
         },
+        # SSL Lab API
+        # read more: https://github.com/ssllabs/ssllabs-scan/blob/master/ssllabs-api-docs-v3.md
+        'ssl_labs': {
+            'url_status': 'https://api.ssllabs.com/api/v3/analyze?host={0}&publih=off',
+            'url_detail': 'https://api.ssllabs.com/api/v3/getEndpointData?host={0}&s={1}',
+            # SSL Labs delay to finish the analysis
+            'delay': 5,
+
+            # translations
+            'protocol': {
+                512: 'SSL2',
+                768: 'SSL3',
+                769: 'TLS10',
+                770: 'TLS11',
+                771: 'TLS12',
+                772: 'TLS13',
+            },
+            # 0: insecure, 1: weak, and not present if suite is strong or good
+            'suite_flag': {
+                0: '0_',
+                1: '1_'
+            },
+            'renegotiation': {
+                1: 'insecure client-initiated renegotiation',
+                2: 'secure renegotiation',
+                4: 'secure client-initiated renegotiation',
+                8: 'server requires secure renegotiation',
+            },
+            'session_resumption': {
+                0: 'disabled',
+                1: 'endpoint returns session IDs, but sessions are not resumed',
+                2: 'disabled',
+            },
+            'session_ticket': {
+                1: 'supported',
+                2: 'implementation is faulty',
+                4: 'server is intolerant to the extension',
+            },
+            'openssl_ccs': {
+                -1: 'test failed',
+                0: 'unknown',
+                1: 'not vulnerable',
+                2: 'vulnerable, not exploitable',
+                3: 'vulnerable and exploitable',
+            },
+            'openssl_lucky_m20': {
+                -1: 'test failed',
+                0: 'unknown',
+                1: 'not vulnerable',
+                2: 'vulnerable and insecure',
+            },
+            'ticket_bleed': {
+                -1: 'test failed',
+                0: 'unknown',
+                1: 'not vulnerable',
+                2: 'vulnerable and insecure',
+                3: 'not vulnerable but a similar bug detected',
+            },
+            'bleichenbacher': {
+                -1: 'test failed',
+                0: 'unknown',
+                1: 'not vulnerable',
+                2: 'vulnerable (weak oracle)',
+                3: 'vulnerable (strong oracle)',
+                4: 'inconsistent results'
+            },
+            'zombie_poodle': {
+                -1: 'test failed',
+                0: 'unknown',
+                1: 'not vulnerable',
+                2: 'vulnerable',
+                3: 'vulnerable and exploitable',
+            },
+            'sleeping_poodle': {
+                -1: 'test failed',
+                0: 'unknown',
+                1: 'not vulnerable',
+                2: 'vulnerable',
+                3: 'vulnerable and exploitable',
+            },
+            'poodle_tls': {
+                -3: 'timeout',
+                -2: 'TLS not supported',
+                -1: 'test failed',
+                0: 'unknown',
+                1: 'not vulnerable',
+                2: 'vulnerable',
+            },
+            'golden_doodle': {
+                -1: 'test failed',
+                0: 'unknown',
+                1: 'not vulnerable',
+                2: 'vulnerable',
+                3: 'vulnerable and exploitable',
+            },
+            'zero_length_padding_oracle': {
+                -1: 'test failed',
+                0: 'unknown',
+                1: 'not vulnerable',
+                2: 'vulnerable',
+                3: 'vulnerable and exploitable',
+            },
+        },
+        # SSL Mate (Cert Spotter) API
+        'ssl_mate': {
+            'url_all': 'https://api.certspotter.com/v1/issuances?domain={0}&include_subdomains=true&expand=dns_names&expand=issuer&expand=cert'
+        },
         # IP whois lookup API
-        'ipapi': {
+        # read more: https://ip-api.com/docs
+        'ip_api': {
             'url_lookup': 'http://ip-api.com/json/{0}?fields={1}',
             # define fields you would like to get from the API
             'fields': 'status,message,continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,mobile,proxy,hosting,query',
         },
+        # Google DNS API
+        # read more: https://developers.google.com/speed/public-dns/docs/doh/json
+        'google_dns': {
+            'url': 'https://dns.google/resolve?name={0}&tyep={1}',
+        },
         # Hacker Target API
         'hacker_target': {
             'url_hosts': 'https://api.hackertarget.com/hostsearch/?q={0}',
+            'url_dns_lookup': 'https://api.hackertarget.com/dnslookup/?q={0}',
+            'url_reverse_dns': 'https://api.hackertarget.com/reversedns/?q={0}',
+            'url_shared_dns': 'https://api.hackertarget.com/findshareddns/?q={0}',
+            'url_hhtp_headers': 'https://api.hackertarget.com/httpheaders/?q={0}',
+            'url_zone_transfer': 'https://api.hackertarget.com/zonetransfer/?q={0}',
         },
         # Security Trails API
         'security_trails': {
             'url_subdomain': 'https://api.securitytrails.com/v1/domain/{0}/subdomains',
             'url_whois': 'https://api.securitytrails.com/v1/domain/{0}/whois',
             'url_whois_history': 'https://api.securitytrails.com/v1/history/{0}/whois',
-            'api_key': random.choice(api_key_securitytrails),
+            'api_key': random.choice(api_key_security_trails),
         },
-        # SSL Mate API
-        'ssl_mate': {
-            'url_all': 'https://api.certspotter.com/v1/issuances?domain={0}&include_subdomains=true&expand=dns_names&expand=issuer&expand=cert'
+        # Gray Noise
+        'gray_noise': {
+            'url_ip': 'https://api.greynoise.io/v3/community/{0}'
+        },
+        # Criminal IP
+        # read more: https://www.criminalip.io/developer/api/
+        'criminal_ip': {
+            'url_ip': 'https://api.criminalip.io/v1/ip/data?ip={0}&full=true',
+            'url_domain': 'https://api.criminalip.io/v1/domain/reports?query={0}',
+            'url_domain_report': 'https://api.criminalip.io/v1/domain/report/{0}',
+            'api_key': random.choice(api_key_criminal_ip),
         },
         # DNS Spy
         'dns_spy': {
@@ -942,6 +1275,124 @@ config = {
             'url_ip': 'https://api.shodan.io/shodan/host/{0}?key={1}',
             'url_dns': 'https://api.shodan.io/dns/domain/{0}?key={1}',
             'api_key': random.choice(api_key_shodan),
+        },
+        # Larger.io
+        # read more: https://www.larger.io/user/api
+        'larger_io': {
+            'url_slow': 'https://api.larger.io/v1/search/key/{0}?domain={1}&live=1',
+            'url_fast': 'https://api.larger.io/v1/search/key/{0}?domain={1}&live=0',
+            'api_key': random.choice(api_key_larger_io),
+            # sleep between queries
+            # based on the query rate limits: https://www.larger.io/user/api
+            'delay': random.randint(10, 20),
+        },
+        # DNS Dumpster
+        'dns_dumpster': {
+            'url': 'https://dnsdumpster.com/',
+        },
+        # Check Host
+        # read more: https://check-host.net/about/api
+        'check_host': {
+            'url_tcp_port': 'https://check-host.net/check-tcp?host={0}&max_nodes=5',
+            'url_udp_port': 'https://check-host.net/check-udp?host={0}&max_nodes=5',
+            'url_result': 'https://check-host.net/check-result/{0}',
+            'delay': random.randint(0, 3),
+        },
+        # Maltiverse
+        # read more: https://app.swaggerhub.com/apis-docs/maltiverse/api/1.1
+        'maltiverse': {
+            'url_ip': 'https://api.maltiverse.com/ip/{0}',
+            'url_domain': 'https://api.maltiverse.com/hostname/{0}',
+        },
+        # W3 Techs
+        'w3_techs': {
+            'url': 'https://w3techs.com/sites/info/{0}',
+            'delay': random.randint(2, 5),
+        },
+        # Rapid DNS
+        'rapid_dns': {
+            'url': 'https://rapiddns.io/s/{0}?full=1#result',
+            'date_format': '%Y-%m-%d',
+        },
+        # Web Tech Survey
+        'web_tech_survey': {
+            'url_search': 'https://webtechsurvey.com/website/{0}/aggregated',
+            'date_format': '%Y-%m-%dT%H:%M:%SZ',
+            'delay': 5,
+        },
+        # Phish Tank
+        # read more: https://phishtank.org/api_info.php
+        'phish_tank': {
+            'url': 'https://checkurl.phishtank.com/checkurl/',
+            'date_format': '%Y-%m-%dT%H:%M:%S.%f',
+        },
+        # Geek Flare
+        # read more: https://geekflare.com/api/docs
+        'geek_flare': {
+            'url_broken_link': 'https://api.geekflare.com/brokenlink',
+            'url_http_protocol': 'https://api.geekflare.com/httpprotocol',
+            'url_http_headers': 'https://api.geekflare.com/httpheader',
+            'url_dns_record': 'https://api.geekflare.com/dnsrecord',
+            # one country among the list provided by Geek Flare
+            # read more: https://geekflare.com/api/docs?python#proxy-county
+            'proxy_country': 'de',
+            'api_key': random.choice(api_key_geek_flare),
+        },
+        # Pulse Dive
+        # read more: https://pulsedive.com/api/scan
+        'pulse_dive': {
+            'url_scan': 'https://pulsedive.com/api/analyze.php',
+            'url_result': 'https://pulsedive.com/api/analyze.php?qid={0}&pretty=0&key={1}',
+            'date_format': '%Y-%m-%dT%H:%M:%S.%f',
+            # type can be passive or active
+            'scan_type': 'passive',
+            'api_key': random.choice(api_key_pulse_dive),
+            'delay': random.randint(2, 5),
+            'date_format': '%Y-%m-%d %H:%M:%S',
+        },
+        # Virus Total
+        # read more: https://developers.virustotal.com/reference
+        'virus_total': {
+            'url_domain': 'https://www.virustotal.com/api/v3/domains/{0}',
+            'url_ip': 'https://www.virustotal.com/api/v3/ip_addresses/{0}',
+            'api_key': random.choice(api_key_virus_total),
+        },
+        # Full Hunt
+        # read more: https://api-docs.fullhunt.io/
+        'dull_hunt': {
+            'url_domain': 'https://fullhunt.io/api/v1/domain/{0}',
+            'url_subdomain': 'https://fullhunt.io/api/v1/domain/{0}/subdomains',
+            'api_key': random.choice(api_key_full_hunt),
+        },
+
+
+
+
+
+
+
+
+
+
+
+        # Hunter.ip API
+        'hunter_io': {
+            'url_search': 'https://hunter.io/search/{0}',
+        },
+        # Black Kite
+        'black_kite': {
+            'url_phishing': 'https://services.blackkitetech.com/api/v1/phishing/domain',
+            'url_blocked_ip': 'https://services.blackkitetech.com/api/v1/blacklist/searchip',
+            'url_breached_email': 'https://services.blackkitetech.com/api/v1/breach/email',
+            'url_breached_domain': 'https://services.blackkitetech.com/api/v1/breach/domain',
+        },
+        # View DNS
+        # read more: https://viewdns.info/api/docs/
+        'view_dns': {
+            'url_http_headers': 'https://api.viewdns.info/httpheaders/?domain={0}&apikey={1}&output=json',
+            'url_page_rank': 'https://api.viewdns.info/pagerank/?domain={0}&apikey={1}&output=json',
+            'url_tcp_port': 'https://api.viewdns.info/portscan/?host={0}&apikey={1}&output=json',
+            'url_dnsbl_spam': 'https://api.viewdns.info/spamdblookup/?ip={0}&apikey={1}&output=json',
         },
     },
 }

@@ -6,6 +6,12 @@
 !sample_results.json
 !sample_results.txt
 
+# custom list of API keys
+api.py
+apikey.py
+_api_keys.py
+apikeys.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 
