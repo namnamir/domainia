@@ -4,9 +4,9 @@
 """
     ### Vulnerability Scanner: Rapid DNS
 
-    This function gets the list of historical DNS records and the reverse DNS of 
+    This function gets the list of historical DNS records and the reverse DNS of
     the given IP address or domain name.
-    It contains duplicated subdomains and related domains as the date or the 
+    It contains duplicated subdomains and related domains as the date or the
     reason might be different.
 
     # Input:  - a single domain name or IP address
@@ -18,7 +18,7 @@ from bs4 import BeautifulSoup
 
 from config import config
 from modules.subdomain.utils import alt_name_sanitizer
-from modules.utils import run_requests, date_formatter
+from modules.utils import url_opener, date_formatter
 
 
 def rapid_dns(bacon, type):
@@ -33,7 +33,7 @@ def rapid_dns(bacon, type):
 
     # get the results
     url = config['api']['rapid_dns']['url'].format(bacon)
-    results = run_requests('GET', url, '', '', '', 'text', 'Rapid DNS')
+    results = url_opener('GET', url, '', '', '', 'text', 'Rapid DNS')
 
     # find the table contains results using Beautiful Soup
     results = BeautifulSoup(results, 'html.parser')
@@ -46,7 +46,7 @@ def rapid_dns(bacon, type):
     for row in results:
         # add the found technology into the set
         row = row.find_all('td')
-        
+
         if type.lower() == 'ip':
             related_domains.add(
                 {
@@ -65,7 +65,7 @@ def rapid_dns(bacon, type):
                     'date': date_formatter(row[3].text.strip(), date_format)
                 }
             )
-    
+
     # return gathered data
     return [
         dns_records

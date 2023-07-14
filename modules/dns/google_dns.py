@@ -19,7 +19,7 @@
 from colorama import Fore, Style
 
 from config import config
-from modules.utils import run_requests, printer
+from modules.utils import url_opener, printer
 from modules.dns.utils import dns_record_type, rr_record_finder
 
 
@@ -33,8 +33,8 @@ def google_dns(domain, key, record):
     # download the JSON response
     url = config['api']['google_dns']['url'].format(domain, record)
     printer('      │        ├□ ' + Fore.GREEN + 'Google DNS is downloading' + Style.RESET_ALL)
-    answers = run_requests('GET', url, '', '', '', 'json', 'Google DNS API')[0]
-    
+    answers = url_opener('GET', url, '', '', '', 'json', 'Google DNS API')[0]
+
     # check if there is any error in the API call
     # 0 means no error
     if answers['Status'] != 0:

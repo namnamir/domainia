@@ -15,7 +15,7 @@ from datetime import datetime
 from time import sleep
 
 from config import config
-from modules.utils import run_requests, date_formatter
+from modules.utils import url_opener, date_formatter
 from modules.subdomain.utils import sub_related_domains
 
 
@@ -42,10 +42,10 @@ def pulse_dive(domain):
         "pretty": "0",
         "key": config['api']['pulse_dive']['api_key']
     }
-    
+
     # send the scan request to Pulse Dive and get the scan ID
     url = config['api']['pulse_dive']['url_scan']
-    results = run_requests('POST', url, '', data, '', 'json', 'Pulse Dive')
+    results = url_opener('POST', url, '', data, '', 'json', 'Pulse Dive')
     scan_id = results[0]['qid']
 
     url = config['api']['pulse_dive']['url_result'].format(
@@ -56,8 +56,8 @@ def pulse_dive(domain):
     # check if result is ready
     while True:
         # send the HTTP request to scan
-        results = run_requests('GET', url, '', '', '', 'json', 'Pulse Dive')[0]
-        
+        results = url_opener('GET', url, '', '', '', 'json', 'Pulse Dive')[0]
+
         # if the doesn't exist, the report exits
         if results['status'] == 'done':
             break
@@ -93,7 +93,7 @@ def pulse_dive(domain):
                 'service': '',
             }
         )
-    
+
     # get the list of technologies
     for tech in results['attributes']['technology']:
         technologies.add(
@@ -104,7 +104,7 @@ def pulse_dive(domain):
                 'date': date_formatter(results['stamp_updated'], date_format)
             }
         )
-    
+
     # get the list of HTTP headers
     for name, value in results['properties']['http'].items():
         # ignore the illegal headers
@@ -117,7 +117,7 @@ def pulse_dive(domain):
                 'value': value,
             }
         )
-    
+
     # get the list of HTML meta data
     for name, value in results['properties']['meta'].items():
         html_meta.add(
@@ -126,7 +126,7 @@ def pulse_dive(domain):
                 'value': value,
             }
         )
-    
+
     # get list of the alternative names
     for alt_name in results['links']['Related Domains']:
         alt_names.add(
@@ -136,11 +136,11 @@ def pulse_dive(domain):
                 'date': date_formatter(alt_name['stamp_linked'], date_format)
             }
         )
-    
-    # call the function to extract subdomain & related-domains from 
+
+    # call the function to extract subdomain & related-domains from
     # the alternative names
     subdomains, related_domains = sub_related_domains(alt_names, domain)
-    
+
     # return gathered data
     return [
         {

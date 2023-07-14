@@ -16,7 +16,7 @@
 from time import sleep
 
 from config import config
-from modules.utils import run_requests
+from modules.utils import url_opener
 
 
 def criminal_ip(bacon, protocol):
@@ -26,38 +26,38 @@ def criminal_ip(bacon, protocol):
     # the HTTP headers to send to Check Host
     headers = {'Accept': 'application/json'}
 
-    # get the list of the ports 
+    # get the list of the ports
     if protocol == 'TCP':
         ports = config['scan_type']['tcp_ports']
     elif protocol == 'UDP':
         ports = config['scan_type']['udp_ports']
     else:
         ports = [21, 22, 25, 80, 143, 443, 587, 993, 995, 2082, 2077, 3306]
-    
+
     # do scan for each port
     for port in ports:
         # add the port number to the bacon
-        bacon = bacon + ':' + str(port)
+        bacon = f'{bacon}:{str(port)}'
         # form the url to be requested
         if protocol == 'UDP':
             url = config['api']['check_host']['url_udp_port'].format(bacon)
         else:
             url = config['api']['check_host']['url_tcp_port'].format(bacon)
         # request the port scan from Check Host
-        request_id = run_requests('GET', url, '', '', headers, 'json', False)
+        request_id = url_opener('GET', url, '', '', headers, 'json', False)
         request_id = request_id[0]['request_id']
 
         # sleep for a certain time to
         sleep(config['api']['check_host']['delay'])
-        
+
         # get the results
         url = config['api']['check_host']['url_result'].format(request_id)
-        results = run_requests(
+        results = url_opener(
             'GET', url, '', '', headers, 'json',
             f'Check Host API for port {port}'
         )
 
-        # set the 
+        # set the
         status = 'closed'
 
         # iterate over the result of each probe
@@ -66,7 +66,7 @@ def criminal_ip(bacon, protocol):
             if result and 'time' in result[0]:
                 port_status = 'open'
                 break
-        
+
         # add the port to the set
         port_status.add(
             {
@@ -79,4 +79,3 @@ def criminal_ip(bacon, protocol):
 
     # return gathered data
     return port_status
- 

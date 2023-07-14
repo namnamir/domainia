@@ -4,7 +4,7 @@
 """
     ### Vulnerability Scanner: Web Tech Survey
 
-    This function gets the list of the technologies (services) used in the given 
+    This function gets the list of the technologies (services) used in the given
     domain name alongside versions and categories.
 
     # Input:  - a single domain name
@@ -16,7 +16,7 @@ import re
 import json
 
 from config import config
-from modules.utils import run_requests, date_formatter
+from modules.utils import url_opener, date_formatter
 
 
 def web_tech_survey(domain):
@@ -26,10 +26,10 @@ def web_tech_survey(domain):
 
     # get the date format of the Rapid DNS from the config file
     date_format = config['api']['rapid_dns']['date_format']
-    
+
     # get the results
     url = config['api']['web_tech_survey']['url'].format(domain)
-    results = run_requests('GET', url, '', '', '', 'text', 'Web Tech Survey')
+    results = url_opener('GET', url, '', '', '', 'text', 'Web Tech Survey')
 
     # a regex to find technology and its version
     regex = r'<script>\s*window.__WTS_SSR_DATA__\s*=\s*(.*?)\s*</script>'
@@ -56,6 +56,6 @@ def web_tech_survey(domain):
                         'date': date_formatter(domain['LastSeen'], date_format)
                     }
                 )
-    
+
     # return gathered data
     return technologies

@@ -4,7 +4,7 @@
 """
     ### Vulnerability Scanner: Full Hunt API
 
-    This function checks if there is any information about the given domain name, 
+    This function checks if there is any information about the given domain name,
     including DNS records, open ports, ect.
 
     Read more: https://api-docs.fullhunt.io/
@@ -15,7 +15,7 @@
 
 
 from config import config
-from modules.utils import run_requests, print_error
+from modules.utils import url_opener, error_printer
 
 
 def full_hunt(domain):
@@ -30,7 +30,7 @@ def full_hunt(domain):
     url = config['api']['full_hunt']['url_domain'].format(domain)
 
     # get the results in JSON from Full Hunt
-    results = run_requests('GET', url, '', '', headers, 'json', 'Full Hunt API')[0]
+    results = url_opener('GET', url, '', '', headers, 'json', 'Full Hunt API')[0]
 
     # if the API call returns data
     if not 'status' in results:
@@ -72,11 +72,10 @@ def full_hunt(domain):
             '',
             f'Code: {results["status"]} ➜ {results["message"]}'
         ]
-        print_error(True, texts)
+        error_printer(True, texts)
 
     # return gathered data
     return [
         vulnerabilities,
         port_status
     ]
- 

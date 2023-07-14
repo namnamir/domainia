@@ -15,7 +15,7 @@ from datetime import datetime
 from colorama import Fore, Style
 
 from config import config
-from modules.utils import run_requests, printer, date_formatter, json_key_checker
+from modules.utils import url_opener, printer, date_formatter, json_key_checker
 
 
 def whoxy(domain):
@@ -33,7 +33,7 @@ def whoxy(domain):
 
         # call the API
         url = config['api']['whoxy']['url_whois'].format(config['api']['whoxy']['api_key'], domain)
-        results = run_requests('GET', url, '', '', '', 'json', 'Whoxy API')[0]
+        results = url_opener('GET', url, '', '', '', 'json', 'Whoxy API')[0]
 
         # convert string dates to the object date and format it accordingly
         # only if there is any data
@@ -44,7 +44,7 @@ def whoxy(domain):
             domain_whois['validity']['age'] = (datetime.strptime(domain_whois['validity']['expiration_date'], config['date_format']) - datetime.strptime(domain_whois['validity']['create_date'], config['date_format'])).days
             domain_whois['validity']['past_days'] = (datetime.now() - datetime.strptime(domain_whois['validity']['create_date'], config['date_format'])).days
             domain_whois['validity']['left_days'] = (datetime.strptime(domain_whois['validity']['expiration_date'], config['date_format']) - datetime.now()).days
-            
+
             domain_whois['registrar']['name'] = json_key_checker(results, ['domain_registrar', 'registrar_name'])
             domain_whois['registrar']['iana_id'] = json_key_checker(results, ['domain_registrar', 'iana_id'])
             domain_whois['registrar']['website'] = json_key_checker(results, ['domain_registrar', 'website_url'])

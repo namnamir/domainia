@@ -4,7 +4,7 @@
 """
     ### Vulnerability Scanner: Censys API
 
-    This function gets the IP address of the host and returns the list of 
+    This function gets the IP address of the host and returns the list of
     services on the host (open ports) and banner grabbing.
 
     Read more: - https://search.censys.io/api#/hosts/viewHost
@@ -17,14 +17,14 @@
 
 
 from config import config
-from modules.utils import run_requests, print_error, json_key_checker
+from modules.utils import url_opener, error_printer, json_key_checker
 
 
 def Censys(bacon, type):
     # variables to store results
     ip_details = dict()
     related_ips = set()
-    
+
     # for the HTTP headers to send to Censys
     headers = {
         'Authorization': f'Basic {config["api"]["censys"]["api_key"]}',
@@ -34,8 +34,8 @@ def Censys(bacon, type):
     # get the results in JSON from Censys based on the type
     if type == 'domain':
         url = config['api']['censys']['url_domain'].format(bacon)
-        results = run_requests('GET', url, '', '', headers, 'json', 'Censys API')[0]
-        
+        results = url_opener('GET', url, '', '', headers, 'json', 'Censys API')[0]
+
         # if the API call returns data
         if results['code'] == 200:
             # get the list of IP addresses and open ports
@@ -84,15 +84,15 @@ def Censys(bacon, type):
                 '',
                 ''
             ]
-            print_error(True, errors)
-        
+            error_printer(True, errors)
+
         # return gathered data
         return related_ips
 
     elif type == 'ip':
         url = config['api']['Censys']['url_ip'].format(bacon)
-        results = run_requests('GET', url, '', '', headers, 'json', 'Censys API')[0]
-        
+        results = url_opener('GET', url, '', '', headers, 'json', 'Censys API')[0]
+
         # if the API call returns data
         if results['code'] == 200:
             ports = set()
@@ -126,7 +126,7 @@ def Censys(bacon, type):
                     'reverse_dns': json_key_checker(
                         details, ['dns', 'reverse_dns', 'names']
                     ),
-                    'tags': [] 
+                    'tags': []
                 }
             )
         else:
@@ -137,7 +137,7 @@ def Censys(bacon, type):
                 '',
                 ''
             ]
-            print_error(True, errors)
+            error_printer(True, errors)
 
         # return gathered data
         return ip_details

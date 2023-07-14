@@ -16,7 +16,7 @@
 from datetime import datetime
 
 from config import config
-from modules.utils import run_requests, print_error, date_formatter
+from modules.utils import url_opener, error_printer, date_formatter
 from modules.subdomain.utils import sub_related_domains
 
 
@@ -36,7 +36,7 @@ def security_trails(domain):
     url = config['api']['security_trails']['url_subdomain'].format(domain)
 
     # get the results in JSON from Security Trails
-    results = run_requests('GET', url, '', '', headers, 'json', 'Security Trails API')
+    results = url_opener('GET', url, '', '', headers, 'json', 'Security Trails API')
 
     # if the API call returns data
     if results[1] == 200:
@@ -50,7 +50,7 @@ def security_trails(domain):
                 }
             )
 
-        # call the function to extract subdomain & related-domains from 
+        # call the function to extract subdomain & related-domains from
         # the alternative names
         subdomains, related_domains = sub_related_domains(alt_names, domain)
 
@@ -60,11 +60,10 @@ def security_trails(domain):
             '',
             f'Code: {results[1]} ➜ {results[0]["message"]}'
         ]
-        print_error(True, texts)
+        error_printer(True, texts)
 
     # return gathered data
     return [
         subdomains,
         related_domains
     ]
- 

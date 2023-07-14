@@ -4,7 +4,7 @@
 """
     ### Vulnerability Scanner: Larger.io API
 
-    This function gets the list of the technologies (services) used in the given 
+    This function gets the list of the technologies (services) used in the given
     domain name.
 
     Read more: - https://www.larger.io/user/api
@@ -19,7 +19,7 @@
 from time import sleep
 
 from config import config
-from modules.utils import run_requests, print_error, json_key_checker, printer
+from modules.utils import url_opener, error_printer, json_key_checker, printer
 
 
 def larger_io(bacon, scan_type):
@@ -31,7 +31,7 @@ def larger_io(bacon, scan_type):
     # if it is defined by STDIN, the setting from the config file will be ignored
     if scan_type == '':
         scan_type = config['scan_type']['technology']
-    
+
     # get the delay defined in the config file
     delay = config['delay']['large_io']
 
@@ -44,8 +44,8 @@ def larger_io(bacon, scan_type):
         url = config['api']['larger_io']['url_slow'].format(api_key, bacon)
     else:
         url = config['api']['larger_io']['url_fast'].format(api_key, bacon)
-    results = run_requests('GET', url, '', '', '', 'json', 'Larger.io API')[0]
-    
+    results = url_opener('GET', url, '', '', '', 'json', 'Larger.io API')[0]
+
     # if the API call returns data
     if 'status' in results and results['status'] != 'false':
         # get the list of technologies
@@ -57,7 +57,7 @@ def larger_io(bacon, scan_type):
                         'version': json_key_checker(tech, ['name']),
                     }
                 )
-        
+
         # get the list of emails
         if 'emails' in results:
             emails = json_key_checker(tech, ['emails'])
@@ -70,8 +70,8 @@ def larger_io(bacon, scan_type):
             '',
             ''
         ]
-        print_error(True, errors)
-    
+        error_printer(True, errors)
+
     # return gathered data
     return [
         technologies,

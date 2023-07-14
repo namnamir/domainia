@@ -14,7 +14,7 @@
 
 
 from config import config
-from modules.utils import run_requests, print_error
+from modules.utils import url_opener, error_printer
 from modules.whois.utils import validate_ip
 
 
@@ -26,8 +26,8 @@ def gray_noise(ip):
     if validate_ip(ip) == "4":
         # download the JSON response
         url = config['api']['gray_noise']['url_ip'].format(ip)
-        results = run_requests('GET', url, '', '', '', 'json', 'Gray Noise API')[0]
-        
+        results = url_opener('GET', url, '', '', '', 'json', 'Gray Noise API')[0]
+
         # check if there is any error in the API call
         # 0 means no error
         if results['message'] != "Success":
@@ -38,7 +38,7 @@ def gray_noise(ip):
                 '',
                 ''
             ]
-            print_error(True, errors)
+            error_printer(True, errors)
             return blocked_list
         else:
             blocked_list.add({

@@ -4,19 +4,19 @@
 """
     ### Whois: IP API
 
-    This function gets the whois of the given IP as well as some checks 
+    This function gets the whois of the given IP as well as some checks
     like if the IP hosts sites, provides VPN, or belongs to a mobile device.
 
     # Input:  - a single IP address
     # Output: - a dictionary contains whois details
-              - a set contains tags related to the IP such as if the IP is used 
+              - a set contains tags related to the IP such as if the IP is used
                 for hosting, VPN, etc.
               - a string returns the reversed DNS of the given IP
 """
 
 
 from config import config
-from modules.utils import run_requests
+from modules.utils import url_opener
 from modules.whois.utils import validate_ip
 
 
@@ -32,7 +32,7 @@ def ip_api(ip):
 
     # call the API
     url = config['api']['ipapi']['url_lookup'].format(ip, config['api']['ip_api']['fields'])
-    results = run_requests('GET', url, '', '', '', 'json', 'IP API')[0]
+    results = url_opener('GET', url, '', '', '', 'json', 'IP API')[0]
 
     # write the data into the dictionary
     if results:
@@ -53,7 +53,7 @@ def ip_api(ip):
         ip_whois['organization'] = results['org']
         ip_whois['as_number'] = results['as']
         ip_whois['as_name'] = results['asname']
-        
+
         reverse_dns = results['reverse']
 
         vulnerabilities.add(

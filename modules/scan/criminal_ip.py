@@ -4,7 +4,7 @@
 """
     ### Vulnerability Scanner: Criminal IP API
 
-    This function gets the list of subdomains and corresponding IPs by calling 
+    This function gets the list of subdomains and corresponding IPs by calling
     the Criminal IP API.
 
     Read more: - https://www.criminalip.io/developer/api/
@@ -22,7 +22,7 @@
 from colorama import Fore, Style
 
 from config import config
-from modules.utils import run_requests, printer, print_error
+from modules.utils import url_opener, printer, error_printer
 from modules.subdomain.utils import alt_name_sanitizer
 
 
@@ -45,24 +45,24 @@ def criminal_ip(bacon, type):
     # get the results in JSON from Criminal IP
     if type == 'domain':
         url = config['api']['criminal_ip']['url_domain'].format(bacon)
-        results = run_requests('GET', url, '', '', headers, 'json', 'Criminal IP API')[0]
-        
+        results = url_opener('GET', url, '', '', headers, 'json', 'Criminal IP API')[0]
+
         # if the API call returns data
         if results['status'] == 200:
             # get the latest report ID
             report_id = results['data']['reports'][0]['scan_id']
 
             url = config['api']['criminal_ip']['url_domain_report'].format(report_id)
-            report = run_requests('GET', url, '', '', headers, 'json', 'Criminal IP API')[0]
+            report = url_opener('GET', url, '', '', headers, 'json', 'Criminal IP API')[0]
 
             # if the API call returns data
             if report['status'] == 200:
                 # get the list of subdomains and related domains
                 for subdomain in report['data']['subdomains']:
                     subdomains.add(subdomain['subdomain_name'])
-                
+
                 subdomains, related_domains = alt_name_sanitizer(subdomains, bacon)
-                
+
                 # get the vulnerability data
                 summary = summary
                 vulnerabilities.add(
@@ -127,7 +127,7 @@ def criminal_ip(bacon, type):
                         'risk': None if summary['suspicious_cookie'] else 'low'
                     }
                 )
-                
+
                 # get the list of subdomains and related domains
                 for tech in report['data']['technologies']:
                     technologies.add(
@@ -141,7 +141,7 @@ def criminal_ip(bacon, type):
 
     elif type == 'ip':
         url = config['api']['criminal_ip']['url_ip'].format(bacon)
-        results = run_requests('GET', url, '', '', '', 'json', 'Criminal IP API')[0]
+        results = url_opener('GET', url, '', '', '', 'json', 'Criminal IP API')[0]
 
         # if the API call returns data
         if results['status'] == 200:
@@ -196,7 +196,7 @@ def criminal_ip(bacon, type):
                 )
     else:
         errors = [f'Criminal IP API does not support "{type}".']
-        print_error(True, errors)
+        error_printer(True, errors)
 
     # return gathered data
     return [
@@ -206,4 +206,3 @@ def criminal_ip(bacon, type):
         technologies,
         vulnerabilities
     ]
- 

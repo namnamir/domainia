@@ -4,7 +4,7 @@
 """
     ### Vulnerability Scanner: Maltiverse API
 
-    This function gets the list of subdomains and corresponding IPs by calling 
+    This function gets the list of subdomains and corresponding IPs by calling
     the Maltiverse API.
 
     Read more: https://app.swaggerhub.com/apis-docs/maltiverse/api/1.1
@@ -17,7 +17,7 @@
 
 
 from config import config
-from modules.utils import run_requests, print_error
+from modules.utils import url_opener, error_printer
 from modules.whois.utils import validate_ip
 
 
@@ -36,11 +36,11 @@ def maltiverse(bacon, type):
         url = config['api']['maltiverse']['url_domain'].format(bacon)
 
     # get the results in JSON from Maltiverse
-    results = run_requests('GET', url, '', '', headers, 'json', 'Maltiverse API')[0]
+    results = url_opener('GET', url, '', '', headers, 'json', 'Maltiverse API')[0]
 
     # if the API call returns data
     if not results['status']:
-        # iterate over the 
+        # iterate over the
         for listed in results['blacklist']:
             blocked_list.add({
                 'by': listed['CIArmy'],
@@ -137,11 +137,10 @@ def maltiverse(bacon, type):
             '',
             ''
         ]
-        print_error(True, errors)
+        error_printer(True, errors)
 
     # return gathered data
     return [
         blocked_list,
         vulnerabilities
     ]
- 

@@ -12,7 +12,7 @@
 
 
 from config import config
-from modules.utils import run_requests, print_error
+from modules.utils import url_opener, error_printer
 
 
 def geek_flare_broken_link(domain):
@@ -31,7 +31,7 @@ def geek_flare_broken_link(domain):
 
     # check if report exist
     url = config['api']['geek_flare']['url_http_headers']
-    results = run_requests('POST', url, '', data, headers, 'json', 'Geek Flare')
+    results = url_opener('POST', url, '', data, headers, 'json', 'Geek Flare')
 
     # check if there is any error
     if results['apiCode'] != 200:
@@ -53,7 +53,7 @@ def geek_flare_broken_link(domain):
             '',
             ''
         ]
-        print_error(True, errors)
-    
+        error_printer(True, errors)
+
     # return gathered data
     return http_headers

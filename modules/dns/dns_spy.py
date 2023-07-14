@@ -4,9 +4,9 @@
 """
     ### DNS Records: DNS Spy API
 
-    This function opens the DNS Spy page and parse the DNS records gathered by 
+    This function opens the DNS Spy page and parse the DNS records gathered by
     DNS-Spy page.
-    
+
     # Input:  - a single domain name
     # Output: - a dictionary contains DNS records details
 """
@@ -16,7 +16,7 @@ from bs4 import BeautifulSoup
 
 from config import config
 from modules.dns.subdomain_takeover import subdomain_takeover
-from modules.utils import run_requests
+from modules.utils import url_opener
 
 
 def dns_spy(domain):
@@ -28,17 +28,17 @@ def dns_spy(domain):
     url = config['api']['dns_spy']['url'].format(domain)
 
     # open the URL
-    results = run_requests('GET', url, '', '', '', 'text', 'DNS Spy API')
+    results = url_opener('GET', url, '', '', '', 'text', 'DNS Spy API')
     text_data = results[0]
     status_code = results[1]
-    
+
     # if it returns Error 404 which means there is no data for the domain
     if str(status_code) == '404':
         return [
             dns_records,
             set(subdomains)
         ]
-    
+
     # parse the page
     rows = BeautifulSoup(text_data, "html.parser").find('table', {'id': 'domain-table'}).find_all('tr')
     for row in rows:
@@ -56,7 +56,7 @@ def dns_spy(domain):
         row[3] = row[3].replace('                                                  ', '')
         row[3] = row[3].replace('                                               ', '')
         row[3] = row[3].replace('                                              ', '')
-        
+
         if row[1] == domain and row[0] != 'TXT':
             value = row[3].split('\n')
             # add values to the results and remove duplicates
@@ -81,7 +81,7 @@ def dns_spy(domain):
             value = sdt_answer + row[1] + ' ' + row[2] + ' ' + row[3]
             # add values to the results
             temp.append(value)
-            
+
         # add the data to results and remove duplicates
         if row[0] in dns_records:
             dns_records[row[0]] += list(set(temp))

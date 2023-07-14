@@ -4,9 +4,9 @@
 """
     ### DNS Checker: DNS Dumpster
 
-    This function gets the value of DNS records provided by DNS Dumpster including 
+    This function gets the value of DNS records provided by DNS Dumpster including
     MX, NS, TXT records as well as subdomain.
-    
+
     # Input:  - a single domain name
     # Output: - a set of dictionaries contains a single DNS record details
               - a set contains list of subdomains
@@ -18,7 +18,7 @@ from datetime import datetime
 
 from config import config
 from modules.subdomain.utils import sub_related_domains
-from modules.utils import run_requests, print_error
+from modules.utils import url_opener, error_printer
 
 
 def dns_dumpster(domain):
@@ -32,7 +32,7 @@ def dns_dumpster(domain):
     url = config['api']['dns_dumpster']['url']
 
     # get the CSRF from the page
-    result = run_requests('GET', url, '', '', '', 'text', 'DNS Dumpster')[0]
+    result = url_opener('GET', url, '', '', '', 'text', 'DNS Dumpster')[0]
     soup = BeautifulSoup(result.content, 'html.parser')
     csrf = soup.findAll('input', attrs={'name': 'csrfmiddlewaretoken'})[0]['value']
 
@@ -40,7 +40,7 @@ def dns_dumpster(domain):
     cookies = {'csrftoken': csrf}
     headers = {'Referer': url}
     data = {'csrfmiddlewaretoken': csrf, 'targetip': domain, 'user': 'free'}
-    post_request = run_requests('POST', url, cookies, data, headers, 'text', 'DNS Dumpster')
+    post_request = url_opener('POST', url, cookies, data, headers, 'text', 'DNS Dumpster')
 
     # go further only if the POST request was successful
     if post_request.status_code == 200:
@@ -95,7 +95,7 @@ def dns_dumpster(domain):
         ]
         # call the function to define if the alt name is a subdomain or not
         subdomains, related_domains = sub_related_domains(alt_names, domain_info)
-    
+
     # if there was an error with getting info
     else:
         texts = [
@@ -103,7 +103,7 @@ def dns_dumpster(domain):
             '',
             f'The error code is: {post_request.status_code}'
         ]
-        print_error(True, texts)
+        error_printer(True, texts)
 
     # return gathered data
     return [

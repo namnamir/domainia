@@ -12,7 +12,7 @@
 
 
 from config import config
-from modules.utils import run_requests, print_error
+from modules.utils import url_opener, error_printer
 
 
 def phish_tank(domain):
@@ -31,10 +31,10 @@ def phish_tank(domain):
     # iterate over different formats
     for uri in formats:
         data = {'url': uri, 'format': 'json'}
-        results = run_requests(
+        results = url_opener(
             'POST', url, '', data, '', 'text', 'Phish Tank'
         )[0]
-        
+
         # if there is no issue
         if results['meta']['status'] == 'success':
             # if the URL is listed in Phish Tank
@@ -54,7 +54,7 @@ def phish_tank(domain):
                 '',
                 f'The error is: {results["errortext"]}'
             ]
-            print_error(True, texts)
+            error_printer(True, texts)
 
 # return gathered data
     return blocked_list

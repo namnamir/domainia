@@ -4,7 +4,7 @@
 """
     ### Vulnerability Scanner: Virus Total API
 
-    This function checks if the domain name or the IP address is listed in any 
+    This function checks if the domain name or the IP address is listed in any
     engines listed by Virus Total.
 
     Read more: https://developers.virustotal.com/reference
@@ -17,7 +17,7 @@
 from datetime import datetime
 
 from config import config
-from modules.utils import run_requests, print_error, date_formatter
+from modules.utils import url_opener, error_printer, date_formatter
 
 
 def virus_total(bacon):
@@ -34,13 +34,13 @@ def virus_total(bacon):
         url = config['api']['virus_total']['url_domain'].format(bacon)
 
     # get the results in JSON from Virus Total
-    results = run_requests('GET', url, '', '', headers, 'json', 'Virus Total API')[0]
+    results = url_opener('GET', url, '', '', headers, 'json', 'Virus Total API')[0]
 
     # if the API call returns data
     if not 'error' in results:
         # get the date in epoch format
         date = ['data']['attributes']['last_analysis_date']
-        date = datetime.fromtimestamp(date)  
+        date = datetime.fromtimestamp(date)
 
         # get the blocked lists
         results = results['data']['attributes']['last_analysis_results']
@@ -65,8 +65,7 @@ def virus_total(bacon):
             '',
             f'Code: {results["code"]} ➜ {results["message"]}'
         ]
-        print_error(True, texts)
+        error_printer(True, texts)
 
     # return gathered data
     return blocked_list
- 

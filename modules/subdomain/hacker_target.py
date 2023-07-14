@@ -4,7 +4,7 @@
 """
     ### Subdomain: Hacker Target API
 
-    This function gets the list of subdomains and corresponding IPs by calling 
+    This function gets the list of subdomains and corresponding IPs by calling
     the Hacker Target API.
 
     # Input:  - a single domain name
@@ -15,7 +15,7 @@
 from colorama import Fore, Style
 
 from config import config
-from modules.utils import run_requests, printer
+from modules.utils import url_opener, printer
 from modules.subdomain.utils import alt_name_sanitizer
 
 
@@ -25,12 +25,12 @@ def hacker_target(domain):
     related_domains = set()
 
     # print the subtitle: Hacker Target
-    printer('      │        ├□ ' + Fore.GREEN + 
+    printer('      │        ├□ ' + Fore.GREEN +
             'Hacker Target API is calling' + Style.RESET_ALL)
 
     # download the result page of Hacker Target
     url = config['api']['hacker_target']['url_hosts'].format(domain)
-    results = run_requests('GET', url, '', '', '', 'text', 'Hacker Target API')[0]
+    results = url_opener('GET', url, '', '', '', 'text', 'Hacker Target API')[0]
     results = results.split('\n')
 
     # get subdomains and related domains out from the output of the API call

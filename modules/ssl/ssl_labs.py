@@ -5,11 +5,11 @@
     ### SSL Certificates: SSL Labs
 
     This function uses the SSL Labs API to get the certificate's details.
-    It, first, checks if there is any existing details. If there is any, loads 
-    it, if not, schedules the analysis. It also gets vulnerability assessments 
+    It, first, checks if there is any existing details. If there is any, loads
+    it, if not, schedules the analysis. It also gets vulnerability assessments
     done by SSL Labs.
     # Read more: https://github.com/ssllabs/ssllabs-scan/blob/master/ssllabs-api-docs-v3.md
-    
+
     # Input:  - a single domain name
     # Output: - a dictionary contains SSL certificate details
 """
@@ -18,7 +18,7 @@
 from time import sleep
 from colorama import Fore, Style
 from config import config
-from modules.utils import run_requests, json_value, printer
+from modules.utils import url_opener, json_value, printer
 
 
 def ssl_labs(domain):
@@ -28,7 +28,7 @@ def ssl_labs(domain):
     print_args = [True, '      │        ├──■ ', '      │        ├──■■ ']
 
     url = config['api']['ssl_labs']['url_status'].format(domain)
-    
+
     # get the certificate from SSL Labs
     printer('      │        ├□ ' + Fore.GREEN + f'SSL Labs API is calling ({url})' + Style.RESET_ALL)
 
@@ -36,7 +36,7 @@ def ssl_labs(domain):
     # if not, run the scan and wait
     while True:
         # get the status
-        json_data = run_requests('GET', url, '', '', '', 'json', 'Initial SSL Labs API')[0]
+        json_data = url_opener('GET', url, '', '', '', 'json', 'Initial SSL Labs API')[0]
         status = json_data['status']
 
         # check the status
@@ -52,9 +52,9 @@ def ssl_labs(domain):
             printer('      │        ├──■ ' + Fore.RED + f'Error in parsing SSL Certificate ({status})' + Style.RESET_ALL)
             printer('      │        └──■■ Error: ' + Fore.RED + json_data['statusMessage'] + Style.RESET_ALL)
             return cert_info
-    
+
     url = config['api']['ssl_labs']['url_detail'].format(domain, status['endpoints'][0]['ipAddress'])
-    results = run_requests('GET', url, '', '', '', 'json', 'SSL Labs API')[0]['details']
+    results = url_opener('GET', url, '', '', '', 'json', 'SSL Labs API')[0]['details']
 
     # continue only if there is any result
     if results:
@@ -63,7 +63,7 @@ def ssl_labs(domain):
         cert_info['vulnerability'] = dict()
         cert_info['control']['protocol'] = list()
         cert_info['control']['suite'] = list()
-        
+
         cert_info['server_signature'] = json_value(results, 'serverSignature')
 
         cert_info['control']['grade'] = status['grade']
@@ -76,7 +76,7 @@ def ssl_labs(domain):
                 # get the suite security flag
                 flag = config['api']['ssl_labs']['suite_flag'][suite['q']] if suite['q'] else ''
                 cert_info['control']['suite'][results['protocol']].append(flag + suite['name'])
-        
+
         # get security controls out of certificate
         cert_info['control']['www_reachable'] = json_value(results, 'prefixDelegation')
         cert_info['control']['non_www_reachable'] = json_value(results, 'nonPrefixDelegation')
@@ -89,7 +89,7 @@ def ssl_labs(domain):
         cert_info['control']['rc4'] = json_value(results, 'supportsRc4')
         cert_info['control']['logjam'] = json_value(results, 'logjam')
         cert_info['control']['dhYsReuse'] = json_value(results, 'dhYsReuse')
-        
+
         # get any vulnerabilities out of certificate
         cert_info['vulnerability']['beast'] = json_value(results, 'vulnBeast')
         cert_info['vulnerability']['heart_bleed'] = json_value(results, 'heartbleed')

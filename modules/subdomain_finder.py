@@ -7,7 +7,7 @@ from colorama import Fore, Back, Style
 from time import sleep
 
 from config import config
-from modules.utils import run_requests, printer
+from modules.utils import url_opener, printer
 
 
 # find subdomains and related with different techniques
@@ -15,7 +15,7 @@ def subdomain_finder(domain, scan_type, existing_subdomains):
     subdomains = set()
     related_domains = set()
 
-    # set the print arguments for the function "run_requests"
+    # set the print arguments for the function "url_opener"
     print_args = [True, '      │        ├──■ ', '      │        │  ■■ ']
 
     # update the list with existing subdomains
@@ -27,12 +27,12 @@ def subdomain_finder(domain, scan_type, existing_subdomains):
         subdomains = set()
 
         # print the subtitle: Hacker Target
-        printer('      │        ├□ ' + Fore.GREEN + 
+        printer('      │        ├□ ' + Fore.GREEN +
               'Hacker Target API is calling' + Style.RESET_ALL)
 
         # download the result page of Hacker Target
         url = config['api']['hacker_target']['url_hosts'].format(domain)
-        text_data = run_requests(url, '', 'text', 'Hacker Target API', print_args)[0]
+        text_data = url_opener(url, '', 'text', 'Hacker Target API', print_args)[0]
         text_data = text_data.split('\n')
 
         # continue only if there is any data for it
@@ -47,20 +47,20 @@ def subdomain_finder(domain, scan_type, existing_subdomains):
                         sd = d.split('.' + domain)[0]
                         subdomains.add(sd)
         return subdomains
-    
+
 
     # call the Security Trails API and parse data
     def security_trails(domain):
         subdomains = set()
 
         # print the subtitle: crt.sh
-        printer('      │        ├□ ' + Fore.GREEN + 
+        printer('      │        ├□ ' + Fore.GREEN +
               'Security Trails API is calling' + Style.RESET_ALL)
 
         # check if the whois API key is set
         if config['api']['security_trails']['api_key'] == '':
-            printer('      │        ├──■ ' + Fore.RED + 
-                  'Security Trails API key is not set. Do it in the "config.py" file.' + 
+            printer('      │        ├──■ ' + Fore.RED +
+                  'Security Trails API key is not set. Do it in the "config.py" file.' +
                   Style.RESET_ALL)
             return subdomains
         else:
@@ -68,7 +68,7 @@ def subdomain_finder(domain, scan_type, existing_subdomains):
             url = config['api']['security_trails']['url_subdomain'].format(domain)
             api_key = config['api']['security_trails']['api_key']
             headers = {'APIKEY': api_key}
-            result = run_requests(url, headers, 'json', 'Security Trails API', print_args)[0]
+            result = url_opener(url, headers, 'json', 'Security Trails API', print_args)[0]
             subdomains = set(result['subdomains'])
 
         return subdomains
@@ -84,15 +84,15 @@ def subdomain_finder(domain, scan_type, existing_subdomains):
         # if it is defined by STDIN, the setting from the config file will be ignored
         if scan_type == '':
             scan_type = config['scan_type']['ssl']
-        
+
         # print the subtitle: crt.sh
-        printer('      │        ├□ ' + Fore.GREEN + 
-              'crt.sh SSL load is running (Scan type: "{0}")'.format(scan_type) + 
+        printer('      │        ├□ ' + Fore.GREEN +
+              'crt.sh SSL load is running (Scan type: "{0}")'.format(scan_type) +
               Style.RESET_ALL)
 
         # download the certificate page on CRT
         url = config['api']['crt_sh']['url_all'].format(domain)
-        json_data = run_requests(url, '', 'json', 'CRT.sh All Certs API', print_args)[0]
+        json_data = url_opener(url, '', 'json', 'CRT.sh All Certs API', print_args)[0]
 
         # continue only if there is any data for it
         if json_data:
@@ -104,14 +104,14 @@ def subdomain_finder(domain, scan_type, existing_subdomains):
                 if (scan_type == "quick") and (i > 0):
                     break
                 url = config['api']['crt_sh']['url_single'].format(json_data[i]['id'])
-                cert = run_requests(url, '', 'text', 'CRT.sh Single Cert API', print_args)[0]
+                cert = url_opener(url, '', 'text', 'CRT.sh Single Cert API', print_args)[0]
                 # fix the HTML format of the space
                 cert = (cert.text).replace('&nbsp;', ' ')
 
                 if scan_type == 'deep':
                     # print the progress
-                    printer('      │      ■■■■  ' + Fore.GREEN + 
-                          '{0} cert(s) out of {1} certificates is loaded '.format(i+1, len(json_data)) + Fore.CYAN + 
+                    printer('      │      ■■■■  ' + Fore.GREEN +
+                          '{0} cert(s) out of {1} certificates is loaded '.format(i+1, len(json_data)) + Fore.CYAN +
                           '({0}%)'.format(str(round((i+1)/len(json_data) * 100))) + Fore.WHITE + ' ■■■■' + Style.RESET_ALL)
 
                 # aggregate all alternative names
@@ -155,7 +155,7 @@ def subdomain_finder(domain, scan_type, existing_subdomains):
 
         # download the certificate page
         url = config['api']['ssl_mate']['url_all'].format(domain)
-        json_data = run_requests(url, '', 'json', 'SSL Mate API', print_args)[0]
+        json_data = url_opener(url, '', 'json', 'SSL Mate API', print_args)[0]
 
         # continue only if there is any data for it
         if json_data:
@@ -190,7 +190,7 @@ def subdomain_finder(domain, scan_type, existing_subdomains):
 
         # download the DNS History page related to subdomains
         url = config['api']['dns_history']['url_subdomain'].format(domain)
-        text_data = run_requests(url, '', 'text', 'DNS History API', print_args)[0]
+        text_data = url_opener(url, '', 'text', 'DNS History API', print_args)[0]
 
         items = BeautifulSoup(text_data, "html.parser").find('div', {'id': 'mainarea'}).find_all('div', {'class': 'clearfix'})[1].find_all('a')
 

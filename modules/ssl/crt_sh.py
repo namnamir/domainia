@@ -5,7 +5,7 @@
     ### SSL Certificates: crt.sh API
 
     This function get the latest certificate details from crt.sh.
-    It first gets the list of all certificates, sort them by ID, and load the 
+    It first gets the list of all certificates, sort them by ID, and load the
     latest certificate (based on ID). Afterwards, parse the page using RE.
 
     # Input:  - a single domain name
@@ -16,7 +16,7 @@
 import re
 from colorama import Fore, Style
 from config import config
-from modules.utils import run_requests, re_position, date_formatter, printer
+from modules.utils import url_opener, re_position, date_formatter, printer
 
 
 def crt_sh(domain):
@@ -28,7 +28,7 @@ def crt_sh(domain):
     # download the certificate page on CRT
     url = config['api']['crt_sh']['url_all'].format(domain)
     printer('      │        ├□ ' + Fore.GREEN + f'CRT.sh API is calling ({url})' + Style.RESET_ALL)
-    results = run_requests('GET', url, '', '', '', 'json', 'Crt.sh API')[0]
+    results = url_opener('GET', url, '', '', '', 'json', 'Crt.sh API')[0]
 
     # continue only if there is any result
     if results:
@@ -36,7 +36,7 @@ def crt_sh(domain):
         results = sorted(results, key=lambda k: k['id'], reverse=True)
 
         url = config['api']['crt_sh']['url_single'].format(results[0]['id'])
-        cert = run_requests('GET', url, '', '', '', 'text', 'Crt.sh API')[0]
+        cert = url_opener('GET', url, '', '', '', 'text', 'Crt.sh API')[0]
 
         # fix the HTML format of the space
         cert = cert.replace('&nbsp;', ' ')

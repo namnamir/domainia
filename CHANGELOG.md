@@ -10,7 +10,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Fix the issue of not loading certificates.
 - Fix the issue with CSV as it was not written properly.
 - Fix the argument parse.
-- 
+
+### Changed
+- Changed the Docstring of files. Google Docstring is used; [read more](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html).
 
 ### Added
 - Add the total time to the scan to get the total time from the beginning.

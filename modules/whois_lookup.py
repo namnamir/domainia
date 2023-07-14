@@ -3,7 +3,7 @@
 from colorama import Fore, Back, Style
 
 from config import config
-from modules.utils import printer
+from modules.utilities.printer import printer
 
 
 # get the wohis of the domain form different sources
@@ -21,7 +21,7 @@ def whois_lookup(domain, api):
         whois, flag = whoxy(whois, domain)
     else:
         printer(Fore.RED + '      │      ■ ' + Fore.RED + 'Whois API is not defined; read the help.' + Style.RESET_ALL)
-        return whois    
+        return whois
 
     # print the result on STDOUT
     if flag:
@@ -69,4 +69,4 @@ def whois_lookup(domain, api):
         return whois
 
     # return the result in the format of list instead of set
-    return whois    
+    return whois

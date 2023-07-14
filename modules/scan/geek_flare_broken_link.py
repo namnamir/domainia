@@ -4,7 +4,7 @@
 """
     ### Vulnerability Scanner: Geek Flare
 
-    This function gets the list of internal and external links as well as their 
+    This function gets the list of internal and external links as well as their
     HTTP status that defines which is broken and which is not
 
     # Input:  - a single domain name
@@ -16,7 +16,7 @@
 
 
 from config import config
-from modules.utils import run_requests, print_error
+from modules.utils import url_opener, error_printer
 
 
 def geek_flare_broken_link(domain):
@@ -38,7 +38,7 @@ def geek_flare_broken_link(domain):
 
     # check if report exist
     url = config['api']['geek_flare']['url_broken_link']
-    results = run_requests('POST', url, '', data, headers, 'json', 'Geek Flare')
+    results = url_opener('POST', url, '', data, headers, 'json', 'Geek Flare')
 
     # check if there is any error
     if results['apiCode'] != 200:
@@ -87,8 +87,8 @@ def geek_flare_broken_link(domain):
             '',
             ''
         ]
-        print_error(True, errors)
-    
+        error_printer(True, errors)
+
     # return gathered data
     return [
         broken_internal_links,

@@ -4,9 +4,9 @@
 """
     ### DNS Checker
 
-    This function is responsible for getting SSL certificate details through 
+    This function is responsible for getting SSL certificate details through
     different methods. Therefore, it will print the summary results on STDOUT.
-    
+
     # Input:  - a single domain name
     # Output: - a dictionary contains SSL certificate details
 """
@@ -21,7 +21,7 @@ from modules.dns.google_dns import google_dns
 from modules.dns.dns_spy import dns_spy
 from modules.dns.dnssec import dnssec
 from modules.whois.ip_api import validate_ip, ip_lookup
-from modules.utils import printer
+from modules.utilities.printer import printer
 
 # resolve the DNS and get all the defined records
 def dns_checker(domain):
@@ -69,7 +69,7 @@ def dns_checker(domain):
                 color = Fore.MAGENTA
             else:
                 color = Fore.YELLOW
-            
+
             # print the result on STDOUT
             l_start = '       │' # for printing IP lookups
             if i == len(answers):

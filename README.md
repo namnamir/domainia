@@ -29,7 +29,9 @@ git clone https://github.com/namnamir/domainia.git
 ```
 Then, by running the following command, install all required dependencies for the current user.
 ```Bash
-pip install requirements.txt --user
+pip install -r requirements.txt --user
+# or
+python -m pip install -r requirements.txt --user
 ```
 
 ## 2. Add API Keys

@@ -4,7 +4,7 @@ import dns.resolver
 import requests
 import random
 from config import config
-from modules.utils import domain_sanitizer
+from modules.utilities.url_sanitizer import url_sanitizer
 
 
 # check if the subdomain is vulnerable to the takeover by misconfiguration in CNAME
@@ -14,7 +14,7 @@ from modules.utils import domain_sanitizer
 #       2: there was an error
 def subdomain_takeover(rdata):
     # sanitize the rdata
-    rdata = domain_sanitizer(rdata)
+    rdata = url_sanitizer(rdata)[1]
 
     # iterate over the CNAMEs defined in the config file
     for cname in config['cnames']:
@@ -70,7 +70,7 @@ def subdomain_takeover(rdata):
                     except Exception:
                         # return error ocurred
                         return 2
-                    
+
                     # if the fingerprint is what is defined in the config file
                     fingerprint = config['cnames']['cname']['fingerprint']
                     if fingerprint == str(req.status_code):

@@ -8,16 +8,16 @@
 """
 
 
-from modules.utils import print_error
+from modules.utilities.error_printer import error_printer
 
 
-# this function checks if the given alternative name is a subdomain or a related 
+# this function checks if the given alternative name is a subdomain or a related
 # domain.
 #
 # domain should be a dictionary in this format
 # domain_info = {'name':string, 'reason':string, 'date':string}
 #
-# result would be a list. The first items represent the type, and the second item 
+# result would be a list. The first items represent the type, and the second item
 # represents the value.
 # possible output
 #    0: alt name and domain are the same
@@ -33,12 +33,12 @@ def sub_related_domain(alt_name, domain):
         alt_name = alt_name.replace('*.', '')
         # for OpenSSL "subjectAltName"
         alt_name = alt_name.replace('DNS:', '')
-        
+
         # check if it is an alt name or a related domain
         # then add it to the corresponding set
         if alt_name.endswith(domain):
             return [
-                1, 
+                1,
                 {
                     'name': alt_name.split('.' + domain)[0],
                     'reason': alt_name['reason'],
@@ -48,7 +48,7 @@ def sub_related_domain(alt_name, domain):
         # if it is a related domain
         else:
             return [
-                2, 
+                2,
                 {
                     'name': alt_name,
                     'reason': alt_name['reason'],
@@ -91,7 +91,7 @@ def sub_related_domains(alt_names, domain_info):
                     '',
                     f'Code: {alt_name_result[0]} ➜ {alt_name_result[1]}'
                 ]
-                print_error(True, texts)
+                error_printer(True, texts)
 
     # return subdomain and related domain
     return [

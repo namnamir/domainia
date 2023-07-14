@@ -1,9 +1,11 @@
 # Result files except the sample one
 *.csv
 *.json
+*.yaml
 *.txt
 !sample_results.csv
 !sample_results.json
+!sample_results.yaml
 !sample_results.txt
 
 # custom list of API keys
