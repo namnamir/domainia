@@ -31,14 +31,6 @@ def site_status(domain: str) -> Dict[str, any]:
         # CSP headers are added as they might not be used in the page
         # however, we need to parse them later
         'http_headers': [
-            {
-                'name': 'content-security-policy',
-                'value': []
-            },
-            {
-                'name': 'content-security-policy-report-only',
-                'value': []
-            },
         ],
         'redirects': [],
         'analytics': {},
