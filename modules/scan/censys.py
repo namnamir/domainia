@@ -78,7 +78,7 @@ def Censys(bacon, type):
                 )
         else:
             errors = [
-                f'There is an error in getting the data from Censys',
+                'There is an error in getting the data from Censys',
                 '',
                 f'{results["status"]} ({results["code"]}): {results["error"]}',
                 '',
@@ -131,7 +131,7 @@ def Censys(bacon, type):
             )
         else:
             errors = [
-                f'There is an error in getting the data from Censys',
+                'There is an error in getting the data from Censys',
                 '',
                 f'{results["status"]} ({results["code"]}): {results["error"]}',
                 '',

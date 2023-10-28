@@ -47,7 +47,7 @@ def geek_flare_broken_link(domain):
 
     else:
         errors = [
-            f'There is an error in getting the data from Geek Flare',
+            'There is an error in getting the data from Geek Flare',
             '',
             f'{results["message"]}',
             '',
