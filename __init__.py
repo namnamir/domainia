@@ -277,6 +277,9 @@ if __name__ == '__main__':
                 page_data['state'] = state
                 page_data['country'] = 'NL'
                 #################################################
+                # Add the date to scan
+                page_data['scan_date'] = start_time.strftime(config["date_format"])
+
                 # get the data by calling relevant functions
                 page_data['urn'] = "http://" + page
                 page_data['hostname'] = hostname
