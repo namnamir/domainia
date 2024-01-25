@@ -22,7 +22,7 @@ def nonce_finder(soup: BeautifulSoup) -> List[str]:
     elements = soup.findAll('style', nonce=True)
     elements += soup.findAll('script', nonce=True)
 
-    # iterate over elemnts
+    # iterate over elements
     for element in elements:
         # add the nonce to the set
         nonces.add(element['nonce'])
