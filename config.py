@@ -71,8 +71,10 @@ config = {
     # file will be ignored
     # possible options: "quick" and "deep"
     'scan_type': {
-        # tags format: [http, ssl, whois, dns, related_sub_domains]
-        'tags': [1, 0, 0, 0, 0],
+        # switch format: [http, ssl, whois, dns, related_sub_domains]
+        'switch': [1, 0, 0, 0, 0],
+        # HTTP switch format: [history (redirects), analytics, meta, links, forms, headers]
+        'http_switch': [0, 0, 0, 0, 0, 1],
         # find alternative domains and subdomains by going into each single
         # certificate or just by skimming the ssl overview
         # list of APIs:
