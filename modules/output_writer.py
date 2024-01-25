@@ -8,8 +8,8 @@ from typing import Dict
 
 from config import config
 import global_variable
-from modules.utilities.exception_handling import exception_details
 from modules.utilities.printer import printer
+from modules.utilities.error_printer import error_printer
 
 
 def output_writer(file_name: str, formats: str, dict_data: Dict) -> None:
@@ -72,27 +72,17 @@ def output_writer(file_name: str, formats: str, dict_data: Dict) -> None:
                 output_file.write(str(output))
 
         except IOError:
-            ex = exception_details()
-            printer(f'      │ ■ {Fore.RED}Error in in I/O (input/output).{Style.RESET_ALL}')
-            if config['verbosity'] >= 4:
-                printer(f'      │ ■■ ERROR: {Fore.MAGENTA}{ex[0]} → {ex[4]}:{ex[3]} ({ex[3].errno}, {ex[3].strerror}) '
-                        f'{Fore.RED}  {ex[1]}{Style.RESET_ALL}')
+            texts = ['Error in in I/O (input/output).']
+            error_printer('exception', texts)
         except TypeError:
-            ex = exception_details()
-            printer(f'      │ ■ {Fore.RED}Error in the in serializing the "{format}" variable.{Style.RESET_ALL}')
-            if config['verbosity'] >= 4:
-                printer(f'      │ ■■ ERROR: {Fore.MAGENTA}{ex[0]} → {ex[4]}:{ex[3]}{Fore.RED} {ex[1]}{Style.RESET_ALL}')
+            texts = [f'Error in the in serializing the "{format}" variable.']
+            error_printer('exception', texts)
         except ValueError:
-            ex = exception_details()
-            printer(f'      │ ■ {Fore.RED}Error in values are going to be written in the "{format}" file.'
-                    f'{Style.RESET_ALL}')
-            if config['verbosity'] >= 4:
-                printer(f'      │ ■■ ERROR: {Fore.MAGENTA}{ex[0]} → {ex[4]}:{ex[3]}{Fore.RED} {ex[1]}{Style.RESET_ALL}')
+            texts = [f'Error in values are going to be written in the "{format}" file.']
+            error_printer('exception', texts)
         except Exception:
-            ex = exception_details()
-            printer(f'      │ ■ {Fore.RED}Error in writing into the "{format}" file.{Style.RESET_ALL}')
-            if config['verbosity'] >= 4:
-                printer(f'      │ ■■ ERROR: {Fore.MAGENTA}{ex[0]} → {ex[4]}:{ex[3]}{Fore.RED} {ex[1]}{Style.RESET_ALL}')
+            texts = [f'Error in writing into the "{format}" file.']
+            error_printer('exception', texts)
 
         # Increment the counter of the formats
         i += 1
