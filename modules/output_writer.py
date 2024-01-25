@@ -24,20 +24,24 @@ def output_writer(file_name: str, formats: str, dict_data: Dict) -> None:
         file_name (str): The name of the file to write the JSON data to.
         dict_data (dict): The dictionary containing the data to write to the file.
     """
+    # Print the name of the domain
+    printer(f'\n [{Fore.GREEN}☵{Fore.WHITE}]──{Fore.RED}{Back.WHITE} Writing into files.{Style.RESET_ALL}')
+
     # Iterate over formats
+    i = 1
     for format in formats:
+        # Form the extension of the file based on the selected "formant"
+        if format in ('json_beautiful', 'json_b', 'b_json', 'beautiful_json'):
+            extension = 'json'
+        else:
+            extension = format
+
+        # Print the output location
+        line = '└' if i == len(formats) else '├'
+        printer(f'      {line}─── {Fore.CYAN}{file_name}.{extension}{Style.RESET_ALL}')
+
         # Write the result in the output file based on the selected format
         try:
-            # Form the extension of the file based on the selected "formant"
-            if format in ('json_beautiful', 'json_b', 'b_json', 'beautiful_json'):
-                extension = 'json'
-            else:
-                extension = format
-
-            # Print the name of the domain
-            printer(f'\n [{Fore.GREEN}☵{Fore.WHITE}]──{Fore.RED}{Back.WHITE} Writing into '
-                    f'{file_name}.{extension}{Style.RESET_ALL}{Fore.GREEN}{Style.RESET_ALL} \n')
-
             # Open the file and start writing in it
             with open(f"{file_name}.{extension}", mode='w', encoding='UTF8', newline='') as output_file:
                 if format == "csv":
@@ -89,3 +93,9 @@ def output_writer(file_name: str, formats: str, dict_data: Dict) -> None:
             printer(f'      │ ■ {Fore.RED}Error in writing into the "{format}" file.{Style.RESET_ALL}')
             if config['verbosity'] >= 4:
                 printer(f'      │ ■■ ERROR: {Fore.MAGENTA}{ex[0]} → {ex[4]}:{ex[3]}{Fore.RED} {ex[1]}{Style.RESET_ALL}')
+
+        # Increment the counter of the formats
+        i += 1
+
+    # Print an empty line
+    printer('\n')
