@@ -1,26 +1,23 @@
 #!/usr/bin/env python
 
-
-"""
-    ### Whois: IP API
-
-    This function gets the whois of the given IP as well as some checks
-    like if the IP hosts sites, provides VPN, or belongs to a mobile device.
-
-    # Input:  - a single IP address
-    # Output: - a dictionary contains whois details
-              - a set contains tags related to the IP such as if the IP is used
-                for hosting, VPN, etc.
-              - a string returns the reversed DNS of the given IP
-"""
-
-
 from config import config
-from modules.utils import url_opener
+from modules.utilities.url_opener import url_opener
 from modules.whois.utils import validate_ip
 
 
 def ip_api(ip):
+    """
+        ### Whois: IP API
+
+        This function gets the whois of the given IP as well as some checks
+        like if the IP hosts sites, provides VPN, or belongs to a mobile device.
+
+        # Input:  - a single IP address
+        # Output: - a dictionary contains whois details
+                - a set contains tags related to the IP such as if the IP is used
+                    for hosting, VPN, etc.
+                - a string returns the reversed DNS of the given IP
+    """
     # a variable to store results
     ip_whois = dict()
     vulnerabilities = set()

@@ -1,26 +1,23 @@
 #!/usr/bin/env python
 
-
-"""
-    ### DNS Records: DNS Resolver
-
-    This function resolves DNS records (something similar to DIG).
-
-    # Input:  - a single domain name
-              - a single DNS record
-              - a list of print arguments
-    # Output: - a list of values related to the given DNS record
-"""
-
-
 from colorama import Fore, Style
 import dns.resolver
 
 from config import config
-from modules.utilities.printer import printer, error_printer
-
+from modules.utilities.printer import printer
+from modules.utilities.error_printer import error_printer
 
 def dns_resolver(domain, record, print_args):
+    """
+        ### DNS Checker: DNS Dig
+
+        This function gets the value of all DNS records.
+
+        # Input:  - a single domain name
+                - the key, subdomain, or selector.subdomain
+                - a single DNS record either in an RR type (int) or case-insensitive string; e.g. 1 or A or a
+        # Output: - a set of dictionaries contains a single DNS record details
+    """
     results = list()
 
     # set the DNS server

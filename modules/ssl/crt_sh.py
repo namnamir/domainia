@@ -1,7 +1,17 @@
 #!/usr/bin/env python
 
+import re
+from colorama import Fore, Style
 
-"""
+from config import config
+from modules.utils import re_position
+from modules.utils import date_formatter
+from modules.utilities.printer import printer
+from modules.utilities.url_opener import url_opener
+
+
+def crt_sh(domain):
+    """
     ### SSL Certificates: crt.sh API
 
     This function get the latest certificate details from crt.sh.
@@ -10,16 +20,7 @@
 
     # Input:  - a single domain name
     # Output: - a dictionary contains SSL certificate details
-"""
-
-
-import re
-from colorama import Fore, Style
-from config import config
-from modules.utils import url_opener, re_position, date_formatter, printer
-
-
-def crt_sh(domain):
+    """
     # a variable to store cert info
     cert_info = dict()
     # get the date format of the crt.sh from the config file

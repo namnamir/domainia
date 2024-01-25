@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from colorama import Fore, Style
 from datetime import datetime
 from usp.tree import sitemap_tree_for_homepage
 
@@ -47,6 +46,7 @@ def json_key_checker(json, keys):
             return json[keys[0]]
     else:
         return ''
+
 
 # a sub-function to parse the result of the regex find_all function
 def re_position(term, pos):

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from colorama import Back, Fore, Style
-import csv
+# import csv
 import json
 import yaml
 from typing import Dict
@@ -24,21 +24,21 @@ def output_writer(file_name: str, formats: str, dict_data: Dict) -> None:
         file_name (str): The name of the file to write the JSON data to.
         dict_data (dict): The dictionary containing the data to write to the file.
     """
-    # iterate over formats
+    # Iterate over formats
     for format in formats:
-        # write the result in the output file based on the selected format
+        # Write the result in the output file based on the selected format
         try:
-            # form the extension of the file based on the selected "formant"
+            # Form the extension of the file based on the selected "formant"
             if format in ('json_beautiful', 'json_b', 'b_json', 'beautiful_json'):
                 extension = 'json'
             else:
                 extension = format
 
-            # print the name of the domain
+            # Print the name of the domain
             printer(f'\n [{Fore.GREEN}☵{Fore.WHITE}]──{Fore.RED}{Back.WHITE} Writing into '
                     f'{file_name}.{extension}{Style.RESET_ALL}{Fore.GREEN}{Style.RESET_ALL} \n')
 
-            # open the file and start writing in it
+            # Open the file and start writing in it
             with open(f"{file_name}.{extension}", mode='w', encoding='UTF8', newline='') as output_file:
                 if format == "csv":
                     # output = csv.writer(output_file, quoting=csv.QUOTE_MINIMAL)
@@ -46,25 +46,25 @@ def output_writer(file_name: str, formats: str, dict_data: Dict) -> None:
                     # flatten_json(json_data)
                     continue
 
-                # if the format is JSON (compact JSON)
+                # If the format is JSON (compact JSON)
                 elif format == 'json':
                     output = json.dumps(dict_data, separators=(",", ":"), default=str, ensure_ascii=False)
 
-                # if the format is JSON (Beautiful JSON)
+                # If the format is JSON (Beautiful JSON)
                 elif format in ['json_beautiful', 'json_b', 'b_json', 'beautiful_json']:
                     indent = config['output']['json']['indent']
                     output = json.dumps(dict_data, indent=indent, default=str, ensure_ascii=False)
 
-                # if the format is YAML
+                # If the format is YAML
                 elif format == 'yaml':
                     indent = config['output']['yaml']['indent']
                     output = yaml.dump(dict_data, indent=indent, allow_unicode=True)
 
-                # if the format is TXT (text)
+                # If the format is TXT (text)
                 elif format == "txt":
                     output = global_variable.ALL_PRINTS
 
-                # print the output
+                # Print the output
                 output_file.write(str(output))
 
         except IOError:

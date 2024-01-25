@@ -1,25 +1,22 @@
 #!/usr/bin/env python
 
-
-"""
-    ### SSL Checker
-
-    This function is responsible for getting SSL certificate details through
-    different methods. Therefore, it will print the summary results on STDOUT.
-
-    # Input:  a single domain name
-    # Output: a dictionary contains SSL certificate details
-"""
-
-
 from colorama import Fore, Back, Style
+
 from modules.ssl.openssl import openssl
 from modules.ssl.crt_sh import crt_sh
 from modules.ssl.ssl_labs import ssl_labs
-from modules.utilities.printer import printer, json_value
+from modules.utilities.printer import printer
+from modules.utils import json_value
 
 
 def ssl_checker(domain):
+    """
+        This function is responsible for getting SSL certificate details through
+        different methods. Therefore, it will print the summary results on STDOUT.
+
+        # Input:  a single domain name
+        # Output: a dictionary contains SSL certificate details
+    """
     # a variable to store cert info
     cert_info = set()
 

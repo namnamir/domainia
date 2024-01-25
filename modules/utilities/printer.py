@@ -4,6 +4,7 @@ import re
 
 import global_variable
 
+
 def printer(term: str) -> None:
     """
     This function writes the input term on STDOUT, then removes any ANSI escape
@@ -18,7 +19,7 @@ def printer(term: str) -> None:
     print(term)
 
     # Remove ANSI escape sequences from the term to be able to save it into a file
-    term = re.sub(r"\x1B\[\d+m", "", term)
+    term = re.sub(r'\x1B\[\d+m', '', term)
 
     # Save the term in a global variable to save in a file later
-    global_variable.ALL_PRINTS += term + "\n"
+    global_variable.ALL_PRINTS += term + '\n'

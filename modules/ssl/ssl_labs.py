@@ -1,7 +1,16 @@
 #!/usr/bin/env python
 
+from time import sleep
+from colorama import Fore, Style
 
-"""
+from config import config
+from modules.utils import json_value
+from modules.utilities.url_opener import url_opener
+from modules.utilities.printer import printer
+
+
+def ssl_labs(domain):
+    """
     ### SSL Certificates: SSL Labs
 
     This function uses the SSL Labs API to get the certificate's details.
@@ -12,16 +21,7 @@
 
     # Input:  - a single domain name
     # Output: - a dictionary contains SSL certificate details
-"""
-
-
-from time import sleep
-from colorama import Fore, Style
-from config import config
-from modules.utils import url_opener, json_value, printer
-
-
-def ssl_labs(domain):
+    """
     # a variable to store cert info
     cert_info = dict()
     # set the print arguments for the function "except_error_print"

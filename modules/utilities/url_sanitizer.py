@@ -34,16 +34,16 @@ def url_sanitizer(url: str) -> List[Union[str, str, str]]:
         Exception: Any exception that may be raised during URL parsing.
     """
     try:
-        # use urlparse() to split the URL into its component parts
+        # Use urlparse() to split the URL into its component parts
         parsed_url = urlparse(url)
 
-        # check if scheme is empty
+        # Check if scheme is empty
         if not parsed_url.scheme:
             url = "http://" + url
             parsed_url = urlparse(url)
 
     except Exception as error:
-        # handle any exceptions that may be raised
+        # Handle any exceptions that may be raised
         texts = [
             f'Error in parsing the domain "{url}".',
             error
@@ -51,7 +51,7 @@ def url_sanitizer(url: str) -> List[Union[str, str, str]]:
         error_printer("exception", texts)
         return ["", ""]
 
-    # return sanitized decomposed url
+    # Return the sanitized decomposed url
     return [
         parsed_url.geturl(),
         parsed_url.hostname,

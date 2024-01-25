@@ -1,27 +1,26 @@
 #!/usr/bin/env python
 
-
-"""
-    ### DNS Checker: DNS Dumpster
-
-    This function gets the value of DNS records provided by DNS Dumpster including
-    MX, NS, TXT records as well as subdomain.
-
-    # Input:  - a single domain name
-    # Output: - a set of dictionaries contains a single DNS record details
-              - a set contains list of subdomains
-              - a set contains list of related domains
-"""
-
 from bs4 import BeautifulSoup
 from datetime import datetime
 
 from config import config
 from modules.subdomain.utils import sub_related_domains
-from modules.utils import url_opener, error_printer
+from modules.utilities.error_printer import error_printer
+from modules.utilities.url_opener import url_opener
 
 
 def dns_dumpster(domain):
+    """
+        ### DNS Checker: DNS Dumpster
+
+        This function gets the value of DNS records provided by DNS Dumpster including
+        MX, NS, TXT records as well as subdomain.
+
+        # Input:  - a single domain name
+        # Output: - a set of dictionaries contains a single DNS record details
+                - a set contains list of subdomains
+                - a set contains list of related domains
+    """
     # some variables to store data
     dns_records = set()
     alt_names = set()
@@ -99,7 +98,7 @@ def dns_dumpster(domain):
     # if there was an error with getting info
     else:
         texts = [
-            f'Open the DSN Dumpster faced an issue.',
+            'Open the DSN Dumpster faced an issue.',
             '',
             f'The error code is: {post_request.status_code}'
         ]

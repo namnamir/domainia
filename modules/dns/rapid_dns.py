@@ -1,29 +1,24 @@
 #!/usr/bin/env python
 
-
-"""
-    ### Vulnerability Scanner: Rapid DNS
-
-    This function gets the list of historical DNS records and the reverse DNS of
-    the given IP address or domain name.
-    It contains duplicated subdomains and related domains as the date or the
-    reason might be different.
-
-    # Input:  - a single domain name or IP address
-    # Output: - a set of dictionaries contains technologies used in the bacon
-"""
-
-
 from bs4 import BeautifulSoup
 
 from config import config
-from modules.subdomain.utils import alt_name_sanitizer
 from modules.utils import url_opener, date_formatter
 
 
 def rapid_dns(bacon, type):
+    """
+        ### Vulnerability Scanner: Rapid DNS
+
+        This function gets the list of historical DNS records and the reverse DNS of
+        the given IP address or domain name.
+        It contains duplicated subdomains and related domains as the date or the
+        reason might be different.
+
+        # Input:  - a single domain name or IP address
+        # Output: - a set of dictionaries contains technologies used in the bacon
+    """
     # variables to store results
-    alt_names = set()
     subdomains = set()
     related_domains = set()
     dns_records = set()

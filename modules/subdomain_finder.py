@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
 from bs4 import BeautifulSoup
-import random
 import re
 from colorama import Fore, Back, Style
 from time import sleep
 
 from config import config
-from modules.utils import url_opener, printer
+from modules.utilities.url_opener import url_opener
+from modules.utilities.printer import printer
 
 
 # find subdomains and related with different techniques
@@ -20,7 +20,6 @@ def subdomain_finder(domain, scan_type, existing_subdomains):
 
     # update the list with existing subdomains
     subdomains.update(existing_subdomains)
-
 
     # call the Hacker Target API and parse data
     def hacker_target(domain):

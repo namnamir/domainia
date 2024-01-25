@@ -1,25 +1,22 @@
 #!/usr/bin/env python
 
-
-"""
-    ### DNS Records: DNS Spy API
-
-    This function opens the DNS Spy page and parse the DNS records gathered by
-    DNS-Spy page.
-
-    # Input:  - a single domain name
-    # Output: - a dictionary contains DNS records details
-"""
-
-
 from bs4 import BeautifulSoup
 
 from config import config
 from modules.dns.subdomain_takeover import subdomain_takeover
-from modules.utils import url_opener
+from modules.utilities.url_opener import url_opener
 
 
 def dns_spy(domain):
+    """
+        ### DNS Records: DNS Spy API
+
+        This function opens the DNS Spy page and parse the DNS records gathered by
+        DNS-Spy page.
+
+        # Input:  - a single domain name
+        # Output: - a dictionary contains DNS records details
+    """
     # initial variables
     dns_records = {}
     subdomains = list()
@@ -89,7 +86,8 @@ def dns_spy(domain):
             dns_records[row[0]] = list(set(temp))
 
         # remove empty items
-        if '' in dns_records[row[0]]: dns_records[row[0]].remove('')
+        if '' in dns_records[row[0]]:
+            dns_records[row[0]].remove('')
 
     # return results
     return [
