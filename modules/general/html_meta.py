@@ -15,19 +15,35 @@ def meta_parser(soup: BeautifulSoup) -> List[Dict[str, str]]:
     Returns:
         List[Dict[str, str]]: A list of dictionaries containing the extracted meta data.
     """
-    # a list to store the extracted meta data
+    # A list to store the extracted meta data
     html_meta_tags = []
 
-    # find "meta" tags within the HTML content
-    # ignore the ones has 'http-equiv' instead of 'name'
+    # Find "meta" tags within the HTML content
+    # Ignore the ones has 'http-equiv' instead of 'name'
     meta_tags = soup.findAll('meta', {'http-equiv': None})
 
     # Iterate over the found metadata and extract the name and value attributes
     for tag in meta_tags:
+        # Set the attribute type
+        if tag.get('name'):
+            attribute_type = 'name'
+        elif tag.get('http-equiv'):
+            attribute_type = 'http-equiv'
+        elif tag.get('charset'):
+            attribute_type = 'charset'
+        elif tag.get('property'):
+            attribute_type = 'property'
+        elif tag.get('itemprop'):
+            attribute_type = 'itemprop'
+        else:
+            print(f'Cannot parse the HTML Meta tag: {tag}')
+            continue
+
         html_meta_tags.append({
-            "name": tag.get("name").lower(),
-            "value": tag.get("content", "")
+            'attribute': attribute_type,
+            'name': tag.get(attribute_type).lower(),
+            'value': tag.get('content', '')
         })
 
-    # return results
+    # Return results
     return html_meta_tags
