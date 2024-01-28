@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-"""
-This module contains functions to send HTTP requests and return results in either text or JSON format.
-"""
 
 from colorama import Fore, Style
 import random
@@ -15,7 +12,50 @@ from modules.utilities.error_printer import error_printer
 
 
 def url_opener(method: str, url: str, cookies: dict = None, data: dict = None, headers: dict = None,
-               resp_type: str = 'text', name: str = '') -> List[Union[List, int, List, List, str]]:
+               resp_type: str = 'text', name: str = '') -> List[Union[List, int, List, List, str, str]]:
+    """
+    This function calls sends the HTTP request based on the given method, cookies, data, headers, etc.
+    and return the results in either text or JSON format. If the 'HTTP status code' is not within 200
+    or 300, it tries to run it in HTTPs by replacing the scheme.
+
+    Args:
+        method (str): HTTP method request; either GET or POST.
+        url (str): URL for HTTP request.
+        cookies (dict, optional): Cookies for HTTP request; defaults is None.
+        data (dict, optional): Data for HTTP request; defaults is None.
+        headers (dict, optional): Headers for HTTP request; defaults is None.
+        resp_type (str, optional): Type of response format (text/json/xml); defaults is 'text'.
+        name (str, optional): Name of the request; defaults is ''.
+
+    Returns:
+        list: A list containing results with this order:
+              [content, status_code, history, http_headers, version, url]
+    """
+    # Call the main function
+    content, status_code, history, http_headers, version = requests_runner(
+            method, url, cookies, data, headers, resp_type, name
+        )
+
+    # If there is any error in getting the HTTP request, try the HTTPs
+    if status_code < 200 or status_code >= 400:
+        url = url.replace('http://', 'https://')
+        content, status_code, history, http_headers, version = requests_runner(
+            method, url, cookies, data, headers, resp_type, name
+        )
+
+    # Return results
+    return [
+        content,
+        status_code,
+        history,
+        http_headers,
+        version,
+        url  # In case the URL's scheme is changed
+    ]
+
+
+def requests_runner(method: str, url: str, cookies: dict = None, data: dict = None, headers: dict = None,
+                    resp_type: str = 'text', name: str = '') -> List[Union[List, int, List, List, str, str]]:
     """
     This function sends the HTTP request based on the given method, cookies, data, headers, etc.
     and return the results in either text or JSON format.
@@ -23,43 +63,43 @@ def url_opener(method: str, url: str, cookies: dict = None, data: dict = None, h
     Args:
         method (str): HTTP method request; either GET or POST.
         url (str): URL for HTTP request.
-        cookies (dict, optional): Cookies for HTTP request. Defaults to None.
-        data (dict, optional): Data for HTTP request. Defaults to None.
-        headers (dict, optional): Headers for HTTP request. Defaults to None.
-        resp_type (str, optional): Type of response format (text/json/xml). Defaults to 'text'.
-        name (str, optional): Name of the request. Defaults to ''.
+        cookies (dict, optional): Cookies for HTTP request; defaults is None.
+        data (dict, optional): Data for HTTP request; defaults is None.
+        headers (dict, optional): Headers for HTTP request; defaults is None.
+        resp_type (str, optional): Type of response format (text/json/xml); defaults is 'text'.
+        name (str, optional): Name of the request; defaults is ''.
 
     Returns:
         list: A list containing results with this order:
-              [content, status_code, history, http_headers, version]
+              [content, status_code, history, http_headers, version, url]
     """
-    # some variables to store results
+    # Some variables to store results
     content = []
+    status_code = 0
     history = []
     http_headers = []
     version = ''
-    status_code = 0
 
-    # print the subtitle based on the the variable "name"
+    # Print the subtitle based on the the variable "name"
     if config['verbosity'] >= 2 and name:
-        printer(f'      │        └□ {Fore.GREEN}{name} is calling{Style.RESET_ALL}')
+        printer(f'      │          ∘ {Fore.GREEN}{name} is calling{Style.RESET_ALL}')
 
-    # form the header and add a random User-Agent
+    # Form the header and add a random User-Agent
     if not headers:
         headers = {'User-Agent': random.choice(config['user_agents'])}
     else:
         headers['User-Agent'] = random.choice(config['user_agents'])
 
-    # send the HTTP request based on the given method
+    # Send the HTTP request based on the given method
     try:
-        # run the GET request
+        # Run the GET request
         if method == 'GET':
             request = requests.get(
                 url,
                 headers=headers,
                 timeout=config['delay']['requests_timeout']
             )
-        # run the POST request
+        # Run the POST request
         elif method == 'POST':
             request = requests.post(
                 url,
@@ -69,19 +109,19 @@ def url_opener(method: str, url: str, cookies: dict = None, data: dict = None, h
                 timeout=config['delay']['requests_timeout']
             )
 
-        # get the status code
+        # Get the status code
         status_code = int(request.status_code)
 
-        # get the history
+        # Get the history
         history = request.history
 
-        # get the headers
+        # Get the headers
         http_headers = request.headers
 
-        # get the HTTP version
+        # Get the HTTP version
         version = request.raw.version
 
-        # get the results if there is the type is either 'text', 'xml', or 'json'
+        # Get the results if there is the type is either 'text', 'xml', or 'json'
         if resp_type == 'json':
             content = json.loads(request.text)
         elif resp_type == 'text' or resp_type == 'xml':
@@ -89,7 +129,7 @@ def url_opener(method: str, url: str, cookies: dict = None, data: dict = None, h
         else:
             content = request
 
-    # exceptions
+    # region: Exceptions
     except requests.exceptions.SSLError:
         texts = [
             f'The URL {url} cannot be opened due to an SSL error.',
@@ -153,8 +193,9 @@ def url_opener(method: str, url: str, cookies: dict = None, data: dict = None, h
             f'Status Code: {status_code}  -  API call URL: {url}'
         ]
         error_printer('exception', texts)
+    # endregion: Exceptions
 
-    # return results
+    # Return results
     return [
         content,
         status_code,
