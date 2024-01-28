@@ -39,10 +39,13 @@ def meta_parser(soup: BeautifulSoup) -> List[Dict[str, str]]:
             print(f'Cannot parse the HTML Meta tag: {tag}')
             continue
 
+        name = tag.get(attribute_type).lower()
+        value = tag.get('content', '')
+
         html_meta_tags.append({
             'attribute': attribute_type,
-            'name': tag.get(attribute_type).lower(),
-            'value': tag.get('content', '')
+            'name': name if attribute_type != 'charset' else 'charset',
+            'value': value if attribute_type != 'charset' else name,
         })
 
     # Return results
