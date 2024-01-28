@@ -64,7 +64,7 @@ config = {
         # delay between loading SSL certificates
         'ssl': random.randint(3, 10),
         # the requests' timeout
-        'requests_timeout': random.randint(10, 15),
+        'requests_timeout': random.randint(20, 60),
     },
     # define type of the scan that has effect on the scan speed
     # if it is defined by STDIN (argument -t), the setting from the config
