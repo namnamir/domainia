@@ -33,13 +33,16 @@ def url_sanitizer(url: str) -> List[Union[str, str, str]]:
     Raises:
         Exception: Any exception that may be raised during URL parsing.
     """
+    # Strip the URL to make sure that there is no leading/tailing space
+    url = url.strip()
+
     try:
         # Use urlparse() to split the URL into its component parts
         parsed_url = urlparse(url)
 
-        # Check if scheme is empty
+        # Check if scheme is empty, add HTTPs
         if not parsed_url.scheme:
-            url = "http://" + url
+            url = 'http://' + url
             parsed_url = urlparse(url)
 
     except Exception as error:
@@ -49,11 +52,13 @@ def url_sanitizer(url: str) -> List[Union[str, str, str]]:
             error
         ]
         error_printer("exception", texts)
-        return ["", ""]
+        return ["", "", ""]
 
     # Return the sanitized decomposed url
     return [
         parsed_url.geturl(),
         parsed_url.hostname,
-        parsed_url.geturl().replace(parsed_url.scheme + "://", "")
+        # Replace the scheme with nothing. The last replacement is related to the case
+        # that there is no scheme and 'http://' is added to it
+        parsed_url.geturl().replace(parsed_url.scheme + '://', '').replace('http://', '')
     ]
