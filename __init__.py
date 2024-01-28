@@ -7,11 +7,11 @@ from time import sleep
 
 from config import config
 from setup import setup_args
-# from modules.whois_lookup import whois
+from modules.whois_lookup import whois_lookup
 from modules.html_status import site_status
-# from modules.ssl_checker import ssl_parser
-# from modules.dns_checker import resolve_dns
-# from modules.subdomain_finder import subdomain_finder
+from modules.ssl_checker import ssl_checker
+from modules.dns_checker import dns_checker
+from modules.subdomain_finder import subdomain_finder
 from modules.utilities.url_sanitizer import url_sanitizer
 from modules.utilities.load_sitemap import load_sitemap
 from modules.utilities.printer import printer
@@ -41,17 +41,17 @@ if __name__ == '__main__':
 ----------------------------------------------------
 
 """
-    # initiating Colorama
+    # Initiating Colorama
     init()
 
-    # a variable to store data of all URNs
+    # A variable to store data of all URNs
     urns_data = []
 
-    # a set to maintain the list of the analyzed domains
-    # it would prevent repetition
+    # A set to maintain the list of the analyzed domains
+    # It would prevent repetition
     analyzed_domains = set()
 
-    # initiate the argument
+    # region: Initiate the argument
     arg = argparse.ArgumentParser('Get the public information of a domain')
     arg.add_argument(
         '-i', '--input',
@@ -125,7 +125,7 @@ if __name__ == '__main__':
 
     args = arg.parse_args()
 
-    # get the list of domains from the input
+    # Get the list of domains from the input
     if not (args.domain or args.input):
         printer(f'\n ■ {Fore.MAGENTA}No domain is given to be evaluated! '
                 f'Consider using the argument "-h" or "--help" to get '
@@ -138,21 +138,21 @@ if __name__ == '__main__':
         else:
             domains = open(args.input, 'r', encoding='UTF8').read().splitlines()
 
-    # get the whois API
+    # Get the whois API
     whois_api = str(args.whois_api).lower()
     if whois_api not in ['whoisxml', 'whoxy']:
         printer(f' ■ {Fore.MAGENTA}The API is not properly used: {whois_api}. '
                 f'It will be ignored and "whoisxml" will be applied.'
                 f'{Style.RESET_ALL}')
 
-    # get the scan type
+    # Get the scan type
     scan_type = str(args.scan_type).lower()
     if (scan_type not in ['deep', 'quick']):
         printer(f' ■ {Fore.MAGENTA}The scan type is not properly used: '
                 f'{scan_type}. It will be ignored and the value of the config '
                 f'file will be used.{Style.RESET_ALL}')
 
-    # get the output file name
+    # Get the output file name
     output_name = args.output
     if output_name:
         output_name = output_name.replace('.txt', '').replace('.csv', '')
@@ -162,13 +162,13 @@ if __name__ == '__main__':
                 f'used: {output_name}. It will be ignored and the value of the config '
                 f'file will be used.{Style.RESET_ALL}')
 
-    # get the sitemap argument; if used, it will download all links provided in the sitemap
+    # Get the sitemap argument; if used, it will download all links provided in the sitemap
     sitemap = args.sitemap
 
-    # get delays between scanning domains; it gos for the absolute value to avoid issues
+    # Get delays between scanning domains; it gos for the absolute value to avoid issues
     delay = abs(args.delay)
 
-    # get the output file format (extension)
+    # Get the output file format (extension)
     output_format = str(args.output_format).strip().lower()
     if output_format not in ['txt', 'json', 'yaml', 'csv', 'all',
                              'json_beautiful', 'json_b', 'b_json', 'beautiful_json']:
@@ -180,71 +180,79 @@ if __name__ == '__main__':
     else:
         output_format = output_format.split(",")
 
-    # get the verbosity
+    # Get the verbosity
     if args.verbosity not in range(1, 5):
         verbosity = config['verbosity']
     else:
         verbosity = args.verbosity
 
-    # print the logo
+    # endregion: Initiate the argument
+
+    # Print the logo
     printer(Fore.GREEN + logo + Style.RESET_ALL)
 
-    # print the parsed arguments
+    # Print the parsed arguments
     printer(' Arguments Used in this Scan:\n')
     for arg, value in vars(args).items():
         printer(f'  ✸ {Fore.GREEN}{arg:17}: {Fore.WHITE}{value}{Style.RESET_ALL}')
     printer('----------------------------------------------------\n\n')
 
-    # get the start time of the scan
+    # Get the start time of the scan
     start_time = datetime.now()
 
-    # iterate over domains to get the data and write the result
+    # Iterate over domains to get the data and write the result
     i = 1
-
     for init_domain in domains:
-        # get the start time of the single domain
+        # Ignore if it the like is empty
+        if not init_domain or init_domain in (None, ''):
+            continue
+        # Get the start time of the single domain
         start_time_domain = datetime.now()
 
-        #################################################
+        # TEMPORARY ####################################
+        # Only for the PhD thesis ######################
         init_domain = init_domain.split(',')
-        print(init_domain)
-        city = init_domain[0]
-        state = init_domain[1]
-        init_domain = init_domain[2]
-        #################################################
+        city = init_domain[0].strip()
+        state = init_domain[1].strip()
+        country = init_domain[2].strip()
+        init_domain = init_domain[3]
+        ################################################
 
-        # print the name of the domain
+        # Print the name of the domain
         printer(f'\n [{Fore.GREEN}+{Style.RESET_ALL}]──┬──{Fore.RED}{Back.WHITE}'
                 f' {init_domain} {Style.RESET_ALL}{Fore.GREEN}'
                 f' ({i}/{len(domains)} - {str(round(i/len(domains) * 100))}%)'
                 f'{Fore.CYAN}  [{start_time.strftime(config["date_format"])}]'
                 f'{Style.RESET_ALL}')
 
-        # sanitize the domain name
+        # Sanitize the domain name
         domain = url_sanitizer(init_domain)[1]
 
-        # check if it should check all pages (via sitemap) or just the homepage
+        # Check if it should check all pages (via sitemap) or just the homepage
         if sitemap:
             printer(f'      │        ├□ {Fore.GREEN}Sitemap of {domain} is loading{Style.RESET_ALL}\n      │')
+            # Get the list of URLs in the sitemap
             pages = load_sitemap(domain)
             printer(f'      │        └□ {Fore.GREEN}{len(pages) - 1} pages retrieved.{Style.RESET_ALL}\n      │')
         else:
             printer('      │')
+            # Set pages as just the homepage
             pages = [domain] if domain else []
 
-        # iterate over
+        # Iterate over pages retrieved from sitemap
         j = 1
         for init_page in pages:
-            # get the start time of the single page (scan)
+            # Get the start time of the single page (scan)
             start_time_page = datetime.now()
-            # a temporary dictionary to save the data of the domain and its internal pages
+
+            # A temporary dictionary to save the data of the domain and its internal pages
             page_data = {}
             hostname = None
 
-            # sanitize the domain name
+            # Sanitize the domain name
             page = url_sanitizer(init_page)[2]
 
-            # if the sitemap is activated (internal pages get scanned)
+            # If the sitemap is activated (internal pages get scanned)
             if domain != page:
                 printer(f'      │\n      ├──{Fore.BLACK}{Back.YELLOW} ➜ {Style.RESET_ALL}'
                         f'{Fore.WHITE} {page} {Fore.GREEN}(Pages: {j}/{len(pages)} '
@@ -254,62 +262,65 @@ if __name__ == '__main__':
                         f'{Style.RESET_ALL}\n      │')
                 hostname = domain
 
-            # if domain format is not correct
+            # If domain format is not correct
             if not page:
                 printer(f'      ├─── ■■ ERROR: {Fore.RED}The URN "{page}" is not '
                         f'formatted properly; it will be ignored. Check if it is '
                         f'written correctly.{Style.RESET_ALL}')
                 page = init_page
+
             else:
+                # If the sanitized URN is different from the initial URN
                 if page != init_page:
                     printer(f'      ├─── {Fore.YELLOW}The sanitized URN is: '
                             f'{Fore.GREEN}{page}{Style.RESET_ALL}\n      │')
 
-                # check if the domain is already analyzed
+                # Check if the domain is already analyzed
                 if page in analyzed_domains:
                     printer(f'      ├─── {Fore.YELLOW}The URN {page} is already '
                             f'analyzed. It will be ignored.{Style.RESET_ALL}\n      │')
                 else:
                     analyzed_domains.add(page)
 
-                #################################################
+                # TEMPORARY ####################################
+                # Only for the PhD thesis ######################
                 page_data['city'] = city
                 page_data['state'] = state
-                page_data['country'] = 'NL'
-                #################################################
+                page_data['country'] = country
+                ################################################
+
                 # Add the date to scan
                 page_data['scan_date'] = start_time.strftime(config["date_format"])
 
-                # get the data by calling relevant functions
-                page_data['urn'] = "http://" + page
+                # Get the data by calling relevant functions
+                page_data['url'] = "http://" + page
                 page_data['hostname'] = hostname
 
-                # start the scan based on the user's request
-                if config['scan_type']['tags'][0]:
-                    page_data['http'] = site_status(page)
-                # if config['scan_type']['tags'][1]:
-                #     page_data['dns_records'], page_data['subdomain'] = resolve_dns(domain)
-                # if config['scan_type']['tags'][2]:
-                #     page_data['whois'] = whois(d, whois_api)
-                # if config['scan_type']['tags'][3]:
-                #     page_data['ssl'] = ssl_parser(domain)
-                # if config['scan_type']['tags'][4]:
-                #     page_data['subdomain'], \
-                #         page_data['related_domain'] = subdomain_finder(domain, scan_type,
-                #                                                                   set(page_data['subdomain']))
+                # Start the scan based on the user's request
+                if config['scan_type']['switch'][0]:
+                    page_data['http'], page_data['url'] = site_status(page)
+                if config['scan_type']['switch'][1]:
+                    page_data['dns_records'], page_data['subdomain'] = dns_checker(page)
+                if config['scan_type']['switch'][2]:
+                    page_data['whois'] = whois_lookup(page, whois_api)
+                if config['scan_type']['switch'][3]:
+                    page_data['ssl'] = ssl_checker(page)
+                if config['scan_type']['switch'][4]:
+                    page_data['subdomain'], page_data['related_domain'] = subdomain_finder(
+                        page, scan_type, set(page_data['subdomain']))
 
-                # add the data of the single domain to the list of all URNs
+                # Add the data of the single domain to the list of all URNs
                 urns_data.append(page_data)
 
-            # get the end time and delta of the single scan
+            # Get the end time and delta of the single scan
             delta_page = datetime.now() - start_time_page
             delta_domain = datetime.now() - start_time_domain
             delta_all = datetime.now() - start_time
 
-            # add the elapsed time of each page
+            # Add the elapsed time of each page
             page_data['elapsed_time'] = str(delta_page)
 
-            # print a message shows the scan for the domain is finished
+            # Print a message shows the scan for the domain is finished
             if j >= len(pages):
                 printer(f'      │\n      └───{Fore.RED}{Back.WHITE} THE END  ({domain}) '
                         f'{Style.RESET_ALL}{Fore.CYAN}  Finished in {delta_domain} '
@@ -319,15 +330,15 @@ if __name__ == '__main__':
                         f'{Fore.WHITE} {page} {Fore.CYAN} Finished in {delta_page} '
                         f'(total time: {delta_all}){Style.RESET_ALL}')
 
-            # increment the domains counter
+            # Increment the domains counter (internal pages)
             j += 1
 
-            # add a delay between scans
+            # Add a delay between scans
             if j - 1 < len(pages):
                 sleep(delay)
 
-        # increment the domains counter
+        # Increment the domains counter (give list by the user)
         i += 1
 
-    # write the results into a TXT, CSV, and JSON files
+    # Write the results into a TXT, CSV, and JSON files
     output_writer(output_name, output_format, urns_data)
