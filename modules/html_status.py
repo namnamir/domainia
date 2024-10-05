@@ -115,6 +115,7 @@ def site_status(domain: str) -> Dict[str, any]:
             if 'count' in html_data['links'] and html_data['links']['count']:
                 printer(f'      │\n      ├───{Fore.BLACK}{Back.WHITE} HTML elements with Links {Style.RESET_ALL}')
 
+                # Iterate over HTTP elements
                 for element in html_data['links']['count']:
                     if (
                         not element.startswith(tuple(['int_', 'ext_', 'internal', 'external']))
@@ -127,7 +128,7 @@ def site_status(domain: str) -> Dict[str, any]:
         if 'meta' in html_data and html_data['meta']:
             printer(f'      │\n      ├───{Fore.BLACK}{Back.WHITE} HTML Metadata {Style.RESET_ALL}')
 
-            print(html_data['meta'])
+            # Iterate over metadata
             for meta in html_data['meta']:
                 for key, value in meta.items():
                     key = key.replace('_', ' ').replace('-', ' ').title()
@@ -137,6 +138,7 @@ def site_status(domain: str) -> Dict[str, any]:
         if 'analytics' in html_data and html_data['analytics']:
             printer(f'      │\n      ├───{Fore.BLACK}{Back.WHITE} Site Analytics Tracking IDs {Style.RESET_ALL}')
 
+            # Iterate over the analytics codes
             for key, value in html_data['analytics'].items():
                 key = key.replace('_', ' ').replace('-', ' ').title()
                 printer(f'      │      ■ {key + ":":24}{Fore.YELLOW}{value}{Style.RESET_ALL}')
@@ -165,6 +167,18 @@ def site_status(domain: str) -> Dict[str, any]:
                     # Add nonces and hashes to the output
                     html_data['csp_nonces'] += nonces
                     html_data['csp_hashes'] += hashes
+
+                # If CSP or CSP-Report-Only is not set
+                elif ('content-security-policy' not in key or
+                      'content-security-policy-report-only' not in key):
+                    # Write the error message of no CSP is set
+                    html_data['http_headers'].append(
+                        {
+                            'name': 'WARNING',
+                            'value': 'NO_CSP'
+                        }
+                    )
+                # Other HTTP headers rather than CSP or CSP-Report-Only
                 else:
                     # Print the results
                     printer(f'      │      ■ {key + ":":24}{Fore.YELLOW}{value}{Style.RESET_ALL}')
@@ -175,6 +189,12 @@ def site_status(domain: str) -> Dict[str, any]:
                             'value': value
                         }
                     )
+        # If there HTTP header is not retrieved or doesn't exist
+        elif config['scan_type']['http_switch'][5] and not headers:
+            html_data['http_headers'] = {
+                'name': 'ERROR',
+                'value': 'NO_HTTP_HEADER'
+            }
 
         # Get CSP headers in HTML meta element; it should contain the attribute 'http-equiv'
         for csp in ('content-security-policy', 'content-security-policy-report-only'):
