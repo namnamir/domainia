@@ -211,11 +211,17 @@ if __name__ == '__main__':
 
         # TEMPORARY ####################################
         # Only for the PhD thesis ######################
-        init_domain = init_domain.split(',')
-        city = init_domain[0].strip()
-        state = init_domain[1].strip()
-        country = init_domain[2].strip()
-        init_domain = init_domain[3]
+        try:
+            init_domain = init_domain.split(',')
+            if len(init_domain) < 4:
+                init_domain = init_domain + ',,,'
+        except Exception:
+            init_domain = init_domain + ',,,'
+        finally:
+            city = init_domain[0].strip()
+            state = init_domain[1].strip()
+            country = init_domain[2].strip()
+            init_domain = init_domain[3]
         ################################################
 
         # Print the name of the domain
