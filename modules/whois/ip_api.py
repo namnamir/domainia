@@ -28,7 +28,7 @@ def ip_api(ip):
         return ip_whois
 
     # call the API
-    url = config['api']['ipapi']['url_lookup'].format(ip, config['api']['ip_api']['fields'])
+    url = config['api']['ip_api']['url_lookup'].format(ip, config['api']['ip_api']['fields'])
     results = url_opener('GET', url, '', '', '', 'json', 'IP API')[0]
 
     # write the data into the dictionary
