@@ -103,8 +103,6 @@ if __name__ == '__main__':
     arg.add_argument(
         '-F', '--output_format',
         default=config['output']['format'],
-        choices=['csv', 'json', 'yaml', 'txt', 'all',
-                 'json_beautiful', 'json_b', 'b_json', 'beautiful_json'],
         dest='output_format',
         help='The format (extension) of the output file\nPossible options: '
              '"csv", "json", "yaml", "txt", or "all"'
@@ -169,16 +167,17 @@ if __name__ == '__main__':
     delay = abs(args.delay)
 
     # Get the output file format (extension)
-    output_format = str(args.output_format).strip().lower()
-    if output_format not in ['txt', 'json', 'yaml', 'csv', 'all',
-                             'json_beautiful', 'json_b', 'b_json', 'beautiful_json']:
-        printer(f' ■ {Fore.MAGENTA}The the output file format (extension) is '
-                f'not properly used: {output_format}. It will be ignored and the value '
-                f'of the config file will be used.{Style.RESET_ALL}')
-    if output_format == 'all':
+    output_format = str(args.output_format).strip().lower().split(",")
+    valid_formats = ['txt', 'json', 'yaml', 'csv', 'all',
+                     'json_beautiful', 'json_b', 'b_json', 'beautiful_json']
+    # Split the formats and validate each one
+    invalid_formats = [fmt for fmt in output_format if fmt not in valid_formats]
+    if invalid_formats:
+        printer(f' ■ {Fore.MAGENTA}Invalid output formats: {", ".join(invalid_formats)}. '
+                f'They will be ignored.{Style.RESET_ALL}')
+        output_format = [fmt for fmt in output_format if fmt in valid_formats]
+    if 'all' in output_format:
         output_format = ['txt', 'json', 'yaml', 'csv']
-    else:
-        output_format = output_format.split(",")
 
     # Get the verbosity
     if args.verbosity not in range(1, 5):
@@ -203,7 +202,7 @@ if __name__ == '__main__':
     # Iterate over domains to get the data and write the result
     i = 1
     for init_domain in domains:
-        # Ignore if it the like is empty
+        # Ignore if it the domain is empty
         if not init_domain or init_domain in (None, ''):
             continue
         # Get the start time of the single domain
@@ -211,17 +210,18 @@ if __name__ == '__main__':
 
         # TEMPORARY ####################################
         # Only for the PhD thesis ######################
-        try:
-            init_domain = init_domain.split(',')
-            if len(init_domain) < 4:
-                init_domain = init_domain + ',,,'
-        except Exception:
-            init_domain = init_domain + ',,,'
-        finally:
-            city = init_domain[0].strip()
-            state = init_domain[1].strip()
-            country = init_domain[2].strip()
-            init_domain = init_domain[3]
+        if args.input:
+            try:
+                init_domain = init_domain.split(',')
+                if len(init_domain) < 4:
+                    init_domain = init_domain + 3*[',']
+            except Exception:
+                init_domain = init_domain + 3*[',']
+            finally:
+                city = init_domain[0].strip()
+                state = init_domain[1].strip()
+                country = init_domain[2].strip()
+                init_domain = init_domain[3]
         ################################################
 
         # Print the name of the domain
@@ -233,6 +233,7 @@ if __name__ == '__main__':
 
         # Sanitize the domain name
         domain = url_sanitizer(init_domain)[1]
+        print("---", domain)
 
         # Check if it should check all pages (via sitemap) or just the homepage
         if sitemap:
@@ -290,9 +291,10 @@ if __name__ == '__main__':
 
                 # TEMPORARY ####################################
                 # Only for the PhD thesis ######################
-                page_data['city'] = city
-                page_data['state'] = state
-                page_data['country'] = country
+                if args.input:
+                    page_data['city'] = city
+                    page_data['state'] = state
+                    page_data['country'] = country
                 ################################################
 
                 # Add the date to scan
