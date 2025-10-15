@@ -150,9 +150,11 @@ def site_status(domain: str) -> Dict[str, any]:
             # Add the HTTP header to the list and print it
             for key, value in headers.items():
                 key = key.lower()
+                csp_flag = True
 
                 # Get the CSP
                 if key in ('content-security-policy', 'content-security-policy-report-only'):
+                    csp_flag = False
                     # Print the results
                     printer(f'      │      ■ {key}')
                     # Parse CSP as well as get nonces and hashes
@@ -168,16 +170,6 @@ def site_status(domain: str) -> Dict[str, any]:
                     html_data['csp_nonces'] += nonces
                     html_data['csp_hashes'] += hashes
 
-                # If CSP or CSP-Report-Only is not set
-                elif ('content-security-policy' not in key or
-                      'content-security-policy-report-only' not in key):
-                    # Write the error message of no CSP is set
-                    html_data['http_headers'].append(
-                        {
-                            'name': 'WARNING',
-                            'value': 'NO_CSP'
-                        }
-                    )
                 # Other HTTP headers rather than CSP or CSP-Report-Only
                 else:
                     # Print the results
@@ -189,10 +181,19 @@ def site_status(domain: str) -> Dict[str, any]:
                             'value': value
                         }
                     )
+            # If CSP or CSP-Report-Only is not set
+            if csp_flag:
+                # Write the error message of no CSP is set
+                html_data['http_headers'].append(
+                    {
+                        'name': '__WARNING__',
+                        'value': 'NO_CSP'
+                    }
+                )
         # If there HTTP header is not retrieved or doesn't exist
         elif config['scan_type']['http_switch'][5] and not headers:
             html_data['http_headers'] = {
-                'name': 'ERROR',
+                'name': '__ERROR__',
                 'value': 'NO_HTTP_HEADER'
             }
 
