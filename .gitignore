@@ -1,24 +1,42 @@
 # Result files except the sample one
 *.csv
 *.json
+*.yaml
 *.txt
 !sample_results.csv
 !sample_results.json
+!sample_results.yaml
 !sample_results.txt
+
+# custom list of API keys
+api.py
+apikey.py
+_api_keys.py
+apikeys.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
+*.py[cod]
+*$py.class
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
 
 # Distribution / packaging
 build
 dist
 Domainia.egg-info
 
-# Environments
-.env
-.venv
+# Distribution / packaging
+.Python
 env/
 venv/
 ENV/
+.venv/
 env.bak/
 venv.bak/
+
+# uv output files and directories
+.uv/
+uv.lock

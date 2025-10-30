@@ -4,22 +4,31 @@ import argparse
 from datetime import datetime
 from colorama import init, Fore, Back, Style
 from time import sleep
-from config import config
 
-from setup import setup_args
-from modules.whois import whois
+from config import config
+import tomllib
+from modules.whois_lookup import whois_lookup
 from modules.html_status import site_status
-from modules.ssl_parser import ssl_parser
-from modules.dns_records import resolve_dns
+from modules.ssl_checker import ssl_checker
+from modules.dns_checker import dns_checker
 from modules.subdomain_finder import subdomain_finder
-from modules.utils import domain_sanitizer, printer
-from modules.output_csv import csv_writer
-from modules.output_json import json_writer
-from modules.output_txt import txt_writer
+from modules.utilities.url_sanitizer import url_sanitizer
+from modules.utilities.load_sitemap import load_sitemap
+from modules.utilities.printer import printer
+from modules.output_writer import output_writer
 
 
 if __name__ == '__main__':
-    logo = """        
+    # Get the project information from the pyproject.toml file
+    with open("pyproject.toml", "rb") as f:
+        pyproject = tomllib.load(f)
+    # Get the project information
+    project = pyproject["project"]
+    # Get the authors information
+    authors = project["authors"][0] if project.get("authors") else {}
+    urls = project.get("urls", {})
+
+    logo = f"""
    ##  ##
  ##        ##
      ##  ##  ##  ########
@@ -34,139 +43,319 @@ if __name__ == '__main__':
 ----------------------------------------------------
             AN AUTOMATED DOMAIN SCANNER
 ----------------------------------------------------
- Version: {0}
- Source:  {1}
- PyPI:    {2}
- By:      {3} ({4})
+ Version: {project["version"]}
+ Source:  {urls.get("Readme", "")}
+ PyPI:    {urls.get("Changelog", "")}
+ By:      {authors.get("name", "")} ({authors.get("email", "")})
 ----------------------------------------------------
 
-""".format(setup_args['version'], setup_args['url'], setup_args['download_url'], setup_args['author'], setup_args['author_email'])
-
-    # a variable to store data in the JSON format
-    json_result = {}
-
-    # a set to maintain the list of the analyzed domains
-    # it would prevent repetition
-    analyzed_domains = set()
-
-    # initiating Colorama
+"""
+    # Initiating Colorama
     init()
 
-    # initiate the argument
+    # A variable to store data of all URNs
+    urns_data = []
+
+    # A set to maintain the list of the analyzed domains
+    # It would prevent repetition
+    analyzed_domains = set()
+
+    # region: Initiate the argument
     arg = argparse.ArgumentParser('Get the public information of a domain')
-    arg.add_argument('-i', '--input', help='Path to the list of domain names, e.g. domains.txt. Each domain name should be in a line.')
-    arg.add_argument('-d', '--domain', help='The comma separated list of domains')
-    arg.add_argument('-w', '--whois', help='Whois API; default "whoisxml".\nPossible options: "whoisxml" and "whoxy"')
-    arg.add_argument('-t', '--type', help='Type of the scan. If it is set, it will ignore the config file value for the scan type.\nPossible options: "quick" and "deep"')
-    arg.add_argument('-o', '--output', help='The name of the output CSV and txt files, e.g. results.csv, results.txt, or results')
-    arg.add_argument('-F', '--output_format', help='The format (extension) of the output file\nPossible options: "csv", "json", "txt", or "all"')
-    arg.add_argument('-v', '--verbosity', help='Set the verbosity; a number between 1 and 5.')
+    arg.add_argument(
+        '-i', '--input',
+        dest='input',
+        help='Path to the list of domain names, e.g. domains.txt. '
+             'Each domain name should be in a line.'
+    )
+    arg.add_argument(
+        '-d', '--domain',
+        dest='domain',
+        help='The comma separated list of domains'
+    )
+    arg.add_argument(
+        '-w', '--whois',
+        default='whoisxml',
+        choices=['whoisxml', 'whoxy'],
+        dest='whois_api',
+        help='Whois API; default "whoisxml".\n'
+             'Possible options: "whoisxml" and "whoxy"'
+    )
+    arg.add_argument(
+        '-t', '--type',
+        default='quick',
+        choices=['quick', 'deep'],
+        dest='scan_type',
+        help='Type of the scan. If it is set, it will ignore the config file '
+             'value for the scan type.\nPossible options: "quick" and "deep"'
+    )
+    arg.add_argument(
+        '-o', '--output',
+        default=config['output']['filename'],
+        dest='output',
+        help='The name of the output CSV and txt files, e.g. results.csv, '
+             'results.txt, or results'
+    )
+    arg.add_argument(
+        '-s', '--sitemap',
+        action="store_true",
+        dest='sitemap',
+        help='Scan all internal links via loading sitemap?'
+    )
+    arg.add_argument(
+        '-D', '--delay',
+        default=config['delay']['domain'],
+        type=int,
+        dest='delay',
+        help='Add a delay between scanning domains in seconds.'
+    )
+    arg.add_argument(
+        '-F', '--output_format',
+        default=config['output']['format'],
+        dest='output_format',
+        help='The format (extension) of the output file\nPossible options: '
+             '"csv", "json", "yaml", "txt", or "all"'
+    )
+    arg.add_argument(
+        '-v', '--verbose',
+        default=config['verbosity'],
+        action='count',
+        dest='verbosity',
+        help='Set the verbosity; a number between 1 and 5.'
+    )
+    arg.add_argument(
+        '--version',
+        action='version',
+        version=project["version"],
+        help='Get the version of the app.'
+    )
+
     args = arg.parse_args()
 
-    # get the list of domains from the input
-    print(args)
+    # Get the list of domains from the input
     if not (args.domain or args.input):
-        printer('\n ■ ' + Fore.MAGENTA + 'No domain is given to be evaluated! Consider using the argument "-h" or "--help" to get instructions.\n' + Style.RESET_ALL)
+        printer(f'\n ■ {Fore.MAGENTA}No domain is given to be evaluated! '
+                f'Consider using the argument "-h" or "--help" to get '
+                f'instructions.\n{Style.RESET_ALL}')
         arg.print_help()
         exit()
     else:
-        domains = args.domain.split(',') if (args.domain) else open(args.input, 'r').read().splitlines()
-    
-    # get the whois API
-    whois_api = str(args.whois).lower() 
-    if whois_api not in ['whoisxml', 'whoxy']:
-        printer(' ■ ' + Fore.MAGENTA + 'The API is not properly used: {0}. It will be ignored and "whoisxml" will be applied.'.format(whois_api) + Style.RESET_ALL)
-        whois_api = 'whoisxml'
-    
-    # get the scan type
-    scan_type = str(args.whois).lower() 
-    if (scan_type not in ['deep', 'quick']):
-        printer(' ■ ' + Fore.MAGENTA + 'The scan type is not properly used: {0}. It will be ignored and the value of the config file will be used.'.format(scan_type) + Style.RESET_ALL)
-        scan_type = ''
-    
-    # get the output file name
-    output = args.output
-    if output:
-        output = output.replace('.txt', '').replace('.csv', '').replace('.json', '')
-    else:
-        printer(' ■ ' + Fore.MAGENTA + 'The the output file name is not properly used: {0}. It will be ignored and the value of the config file will be used.'.format(output) + Style.RESET_ALL)
-        output = config['output']['filename']
-    
-    # get the output file format (extension)
-    output_format = str(args.output_format).lower()
-    if output_format not in ['txt', 'json', 'csv', 'all']:
-        printer(' ■ ' + Fore.MAGENTA + 'The the output file format (extension) is not properly used: {0}. It will be ignored and the value of the config file will be used.'.format(output_format) + Style.RESET_ALL)
-        output_format = config['output']['format']
-    if output_format == 'all':
-        output_format = ['txt', 'json', 'csv']
+        if (args.domain):
+            domains = args.domain.split(',')
+        else:
+            domains = open(args.input, 'r', encoding='UTF8').read().splitlines()
 
-    # get the verbosity
-    if not args.verbosity in range (1, 5):
-        verbosity = config['verbosity'] if (config['verbosity'] in range (1, 5)) else 1
+    # Get the whois API
+    whois_api = str(args.whois_api).lower()
+    if whois_api not in ['whoisxml', 'whoxy']:
+        printer(f' ■ {Fore.MAGENTA}The API is not properly used: {whois_api}. '
+                f'It will be ignored and "whoisxml" will be applied.'
+                f'{Style.RESET_ALL}')
+
+    # Get the scan type
+    scan_type = str(args.scan_type).lower()
+    if (scan_type not in ['deep', 'quick']):
+        printer(f' ■ {Fore.MAGENTA}The scan type is not properly used: '
+                f'{scan_type}. It will be ignored and the value of the config '
+                f'file will be used.{Style.RESET_ALL}')
+
+    # Get the output file name
+    output_name = args.output
+    if output_name:
+        output_name = output_name.replace('.txt', '').replace('.csv', '')
+        output_name = output_name.replace('.yaml', '').replace('.json', '')
+    else:
+        printer(f' ■ {Fore.MAGENTA}The the output file name is not properly '
+                f'used: {output_name}. It will be ignored and the value of the config '
+                f'file will be used.{Style.RESET_ALL}')
+
+    # Get the sitemap argument; if used, it will download all links provided in the sitemap
+    sitemap = args.sitemap
+
+    # Get delays between scanning domains; it gos for the absolute value to avoid issues
+    delay = abs(args.delay)
+
+    # Get the output file format (extension)
+    output_format = str(args.output_format).strip().lower().split(",")
+    valid_formats = ['txt', 'json', 'yaml', 'csv', 'all',
+                     'json_beautiful', 'json_b', 'b_json', 'beautiful_json']
+    # Split the formats and validate each one
+    invalid_formats = [fmt for fmt in output_format if fmt not in valid_formats]
+    if invalid_formats:
+        printer(f' ■ {Fore.MAGENTA}Invalid output formats: {", ".join(invalid_formats)}. '
+                f'They will be ignored.{Style.RESET_ALL}')
+        output_format = [fmt for fmt in output_format if fmt in valid_formats]
+    if 'all' in output_format:
+        output_format = ['txt', 'json', 'yaml', 'csv']
+
+    # Get the verbosity
+    if args.verbosity not in range(1, 5):
+        verbosity = config['verbosity']
     else:
         verbosity = args.verbosity
 
-    # print the logo
+    # endregion: Initiate the argument
+
+    # Print the logo
     printer(Fore.GREEN + logo + Style.RESET_ALL)
 
-    # iterate over domains to get the data and write the result
+    # Print the parsed arguments
+    printer(' Arguments Used in this Scan:\n')
+    for arg, value in vars(args).items():
+        printer(f'  ✸ {Fore.GREEN}{arg:17}: {Fore.WHITE}{value}{Style.RESET_ALL}')
+    printer('----------------------------------------------------\n\n')
+
+    # Get the start time of the scan
+    start_time = datetime.now()
+
+    # Iterate over domains to get the data and write the result
     i = 1
-    for dom in domains:
-        # get the start time of the scan
-        start_time = datetime.now()
+    for init_domain in domains:
+        # Ignore if it the domain is empty
+        if not init_domain or init_domain in (None, ''):
+            continue
+        # Get the start time of the single domain
+        start_time_domain = datetime.now()
 
-        # print the name of the domain
-        printer('\n [' + Fore.GREEN + '+' + Fore.WHITE + ']──┬──' + 
-                Fore.RED + Back.WHITE + ' {0} '.format(dom) + Style.RESET_ALL + Fore.GREEN + 
-                ' ({0}/{1} - {2}%)'.format(i, len(domains), str(round(i/len(domains) * 100))) + 
-                Fore.CYAN + '  [{0}]'.format(start_time.strftime(config['date_format'])) +
-                Style.RESET_ALL + '\n      │')
-        
-        # sanitize the domain name
-        d = domain_sanitizer(dom)
-        
-        # if domain format is not correct
-        if not d:
-            printer('      ├─── ■■ ERROR: ' + Fore.RED + 'The domain "{0}" is not formatted properly; it will be ignored. Check if it is written correctly.'.format(dom) + Style.RESET_ALL)
-            d = dom
+        # TEMPORARY ####################################
+        # Only for the PhD thesis ######################
+        if args.input:
+            try:
+                init_domain = init_domain.split(',')
+                if len(init_domain) < 4:
+                    init_domain = init_domain + 3*[',']
+            except Exception:
+                init_domain = init_domain + 3*[',']
+            finally:
+                city = init_domain[0].strip()
+                state = init_domain[1].strip()
+                country = init_domain[2].strip()
+                init_domain = init_domain[3]
+        ################################################
+
+        # Print the name of the domain
+        printer(f'\n [{Fore.GREEN}+{Style.RESET_ALL}]──┬──{Fore.RED}{Back.WHITE}'
+                f' {init_domain} {Style.RESET_ALL}{Fore.GREEN}'
+                f' ({i}/{len(domains)} - {str(round(i/len(domains) * 100))}%)'
+                f'{Fore.CYAN}  [{start_time.strftime(config["date_format"])}]'
+                f'{Style.RESET_ALL}')
+
+        # Sanitize the domain name
+        domain = url_sanitizer(init_domain)[1]
+        print("---", domain)
+
+        # Check if it should check all pages (via sitemap) or just the homepage
+        if sitemap:
+            printer(f'      │        ├□ {Fore.GREEN}Sitemap of {domain} is loading{Style.RESET_ALL}\n      │')
+            # Get the list of URLs in the sitemap
+            pages = load_sitemap(domain)
+            printer(f'      │        └□ {Fore.GREEN}{len(pages) - 1} pages retrieved.{Style.RESET_ALL}\n      │')
         else:
-            if d != dom:
-                printer('      ├─── ' + 'The sanitized domain is: ' + Fore.GREEN + d + Style.RESET_ALL + '\n      │')
-            
-            # check if the domain is already analyzed
-            if d in analyzed_domains:
-                printer('      ├─── ' + Fore.YELLOW + 'The domain {0} is already analyzed. It will be ignored.'.format(d) + Style.RESET_ALL + '\n      │')
+            printer('      │')
+            # Set pages as just the homepage
+            pages = [domain] if domain else []
+
+        # Iterate over pages retrieved from sitemap
+        j = 1
+        for init_page in pages:
+            # Get the start time of the single page (scan)
+            start_time_page = datetime.now()
+
+            # A temporary dictionary to save the data of the domain and its internal pages
+            page_data = {}
+            hostname = None
+
+            # Sanitize the domain name
+            page = url_sanitizer(init_page)[2]
+
+            # If the sitemap is activated (internal pages get scanned)
+            if domain != page:
+                printer(f'      │\n      ├──{Fore.BLACK}{Back.YELLOW} ➜ {Style.RESET_ALL}'
+                        f'{Fore.WHITE} {page} {Fore.GREEN}(Pages: {j}/{len(pages)} '
+                        f'- {str(round(j/len(pages) * 100))}% | Domains: '
+                        f'{i}/{len(domains)}){Fore.CYAN}  '
+                        f'[{start_time.strftime(config["date_format"])}]'
+                        f'{Style.RESET_ALL}\n      │')
+                hostname = domain
+
+            # If domain format is not correct
+            if not page:
+                printer(f'      ├─── ■■ ERROR: {Fore.RED}The URN "{page}" is not '
+                        f'formatted properly; it will be ignored. Check if it is '
+                        f'written correctly.{Style.RESET_ALL}')
+                page = init_page
+
             else:
-                analyzed_domains.add(d)
+                # If the sanitized URN is different from the initial URN
+                if page != init_page:
+                    printer(f'      ├─── {Fore.YELLOW}The sanitized URN is: '
+                            f'{Fore.GREEN}{page}{Style.RESET_ALL}\n      │')
 
-            # get the data by calling relevant functions
-            verbosity = 2
-            json_result[d] = {}
-            json_result[d]['http'] = site_status(d)
-            json_result[d]['dns_records'], \
-            json_result[d]['subdomain'] = resolve_dns(d)
-            json_result[d]['whois'] = whois(d, whois_api)
-            json_result[d]['ssl'] = ssl_parser(d)
-            json_result[d]['subdomain'], \
-            json_result[d]['related_domain'] = subdomain_finder(d, scan_type, set(json_result[d]['subdomain']))
+                # Check if the domain is already analyzed
+                if page in analyzed_domains:
+                    printer(f'      ├─── {Fore.YELLOW}The URN {page} is already '
+                            f'analyzed. It will be ignored.{Style.RESET_ALL}\n      │')
+                else:
+                    analyzed_domains.add(page)
 
-        end_time = datetime.now()
-        delta = end_time - start_time
+                # TEMPORARY ####################################
+                # Only for the PhD thesis ######################
+                if args.input:
+                    page_data['city'] = city
+                    page_data['state'] = state
+                    page_data['country'] = country
+                ################################################
 
-        # print a message shows the scan for the domain is finished
-        printer('      │\n      └───' + Fore.RED + Back.WHITE + ' THE END  ({0}) '.format(d) + 
-            Style.RESET_ALL + Fore.CYAN + '  Finished in {0}'.format(delta) +
-            Style.RESET_ALL + '\n')
+                # Add the date to scan
+                page_data['scan_date'] = start_time.strftime(config["date_format"])
 
+                # Get the data by calling relevant functions
+                page_data['url'] = "http://" + page
+                page_data['hostname'] = hostname
+
+                # Start the scan based on the user's request
+                if config['scan_type']['switch'][0]:
+                    page_data['http'], page_data['url'] = site_status(page)
+                if config['scan_type']['switch'][1]:
+                    page_data['dns_records'], page_data['subdomain'] = dns_checker(page)
+                if config['scan_type']['switch'][2]:
+                    page_data['whois'] = whois_lookup(page, whois_api)
+                if config['scan_type']['switch'][3]:
+                    page_data['ssl'] = ssl_checker(page)
+                if config['scan_type']['switch'][4]:
+                    page_data['subdomain'], page_data['related_domain'] = subdomain_finder(
+                        page, scan_type, set(page_data['subdomain']))
+
+                # Add the data of the single domain to the list of all URNs
+                urns_data.append(page_data)
+
+            # Get the end time and delta of the single scan
+            delta_page = datetime.now() - start_time_page
+            delta_domain = datetime.now() - start_time_domain
+            delta_all = datetime.now() - start_time
+
+            # Add the elapsed time of each page
+            page_data['elapsed_time'] = str(delta_page)
+
+            # Print a message shows the scan for the domain is finished
+            if j >= len(pages):
+                printer(f'      │\n      └───{Fore.RED}{Back.WHITE} THE END  ({domain}) '
+                        f'{Style.RESET_ALL}{Fore.CYAN}  Finished in {delta_domain} '
+                        f'(total time: {delta_all}){Style.RESET_ALL}\n')
+            else:
+                printer(f'      │\n      └──{Fore.BLACK}{Back.YELLOW} ✔ {Style.RESET_ALL}'
+                        f'{Fore.WHITE} {page} {Fore.CYAN} Finished in {delta_page} '
+                        f'(total time: {delta_all}){Style.RESET_ALL}')
+
+            # Increment the domains counter (internal pages)
+            j += 1
+
+            # Add a delay between scans
+            if j - 1 < len(pages):
+                sleep(delay)
+
+        # Increment the domains counter (give list by the user)
         i += 1
-        # add a delay between investigating domains
-        if i-1 < len(domains):
-            sleep(config['delay']['domain'])
 
-    # write the results into a TXT, CSV, and JSON files
-    if 'csv' in output_format:
-        csv_writer(output + '.csv', json_result)
-    # if 'json' in output_format:
-    #     json_writer(output + '.json', json_result)
-    if 'txt' in output_format:
-        txt_writer(output + '.txt')
+    # Write the results into a TXT, CSV, and JSON files
+    output_writer(output_name, output_format, urns_data)
