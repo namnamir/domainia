@@ -6,7 +6,7 @@ from colorama import init, Fore, Back, Style
 from time import sleep
 
 from config import config
-from setup import setup_args
+import tomllib
 from modules.whois_lookup import whois_lookup
 from modules.html_status import site_status
 from modules.ssl_checker import ssl_checker
@@ -19,6 +19,15 @@ from modules.output_writer import output_writer
 
 
 if __name__ == '__main__':
+    # Get the project information from the pyproject.toml file
+    with open("pyproject.toml", "rb") as f:
+        pyproject = tomllib.load(f)
+    # Get the project information
+    project = pyproject["project"]
+    # Get the authors information
+    authors = project["authors"][0] if project.get("authors") else {}
+    urls = project.get("urls", {})
+
     logo = f"""
    ##  ##
  ##        ##
@@ -34,10 +43,10 @@ if __name__ == '__main__':
 ----------------------------------------------------
             AN AUTOMATED DOMAIN SCANNER
 ----------------------------------------------------
- Version: {setup_args["version"]}
- Source:  {setup_args["url"]}
- PyPI:    {setup_args["download_url"]}
- By:      {setup_args["author"]} ({setup_args["author_email"]})
+ Version: {project["version"]}
+ Source:  {urls.get("Readme", "")}
+ PyPI:    {urls.get("Changelog", "")}
+ By:      {authors.get("name", "")} ({authors.get("email", "")})
 ----------------------------------------------------
 
 """
@@ -117,7 +126,7 @@ if __name__ == '__main__':
     arg.add_argument(
         '--version',
         action='version',
-        version=setup_args['version'],
+        version=project["version"],
         help='Get the version of the app.'
     )
 
