@@ -12,6 +12,7 @@ Homepage = "https://domainia.irsec.eu"
 Repository = "https://github.com/namnamir/domainia"
 Issues = "https://github.com/namnamir/domainia/issues"
 Documentation = "https://domainia.irsec.eu"
+PyPI = "https://pypi.org/project/domainia/"
 
 keywords = [
     "osint", "certificate", "scanner", "domain", "security", "passive", "active",
