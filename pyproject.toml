@@ -3,11 +3,10 @@ name = "domainia"
 authors = [{ name = "Ali N / IRSec", email = "hi@irsec.eu" }]
 version = "2.2.0"
 description = "Domainia Scanner is an automated Open-source Intelligence (OSINT) tool that enumerates subdomains, all DNS records, IP addresses, related domains/subdomains, certificate details, site info, HTTP status, name servers (NS), domain whois, and etc. of a single domain or a list of domains by using the passive and active reconnaissance techniques."
+readme = "README.md"
 
 license = { file = "LICENSE" }
 [project.urls]
-Readme = "README.md"
-Changelog = "CHANGELOG.md"
 Homepage = "https://domainia.irsec.eu"
 Repository = "https://github.com/namnamir/domainia"
 Issues = "https://github.com/namnamir/domainia/issues"
