@@ -1,0 +1,64 @@
+[project]
+name = "domainia"
+authors = [{ name = "Ali N / IRSec" }]
+version = "2.2.0"
+description = "Domainia Scanner is an automated Open-source Intelligence (OSINT) tool that enumerates subdomains, all DNS records, IP addresses, related domains/subdomains, certificate details, site info, HTTP status, name servers (NS), domain whois, and etc. of a single domain or a list of domains by using the passive and active reconnaissance techniques."
+
+license = { file = "LICENSE" }
+[project.urls]
+Readme = "README.md"
+Changelog = "CHANGELOG.md"
+
+keywords = [
+    "osint", "certificate", "scanner", "domain", "security", "passive", "active",
+    "reconnaissance", "subdomain", "dns", "ssl", "whois", "whois-lookup",
+    "certifi", "subdomain-scanner", "subdomain-enumeration", "osint-python",
+    "scanner", "ipv6", "ipv4", "ip", "ssl-certificates", "osint-python", "dkim",
+    "spf", "dmarc"
+]
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+requires-python = ">=3.13"
+dependencies = [
+    "beautifulsoup4>=4.14.2",
+    "certifi>=2025.10.5",
+    "cffi>=2.0.0",
+    "charset-normalizer>=3.4.4",
+    "colorama>=0.4.6",
+    "cryptography>=46.0.3",
+    "dnspython>=2.8.0",
+    "idna>=3.11",
+    "pycparser>=2.23",
+    "pyopenssl>=25.3.0",
+    "python-dateutil>=2.9.0.post0",
+    "pyyaml>=6.0.3",
+    "requests>=2.32.5",
+    "setuptools>=80.9.0",
+    "six>=1.17.0",
+    "soupsieve>=2.8",
+    "typing-extensions>=4.15.0",
+    "ultimate-sitemap-parser>=1.6.0",
+    "urllib3>=2.5.0",
+]
+
+# Console entry points
+[project.scripts]
+domainia = "main:main"
+
+# Optional dependency groups
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+    "mypy",
+]
+
+# Build system metadata
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
